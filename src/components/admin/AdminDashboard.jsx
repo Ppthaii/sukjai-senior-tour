@@ -56,14 +56,14 @@ const PRESET_MEDICAL = [
 
 // รูปภาพตัวอย่างมาตรฐาน เผื่อพนักงานไม่มีรูปในเครื่อง
 const PRESET_SAMPLE_IMAGES = [
-  { label: '🛕 พระปฐมเจดีย์ (นครปฐม)', url: 'https://images.unsplash.com/photo-1544644181-1484b3fdfc62?auto=format&fit=crop&w=800&q=80' },
-  { label: '🛍️ ตลาดดอนหวายริมน้ำ', url: 'https://images.unsplash.com/photo-1552465011-b4e21bf6e79a?auto=format&fit=crop&w=800&q=80' },
+  { label: '🌸 ภาพทางการ: นครปฐม', url: '/images/tours/nakhon-pathom.jpg' },
+  { label: '🌸 ภาพทางการ: อยุธยา', url: '/images/tours/ayutthaya.jpg' },
+  { label: '🌸 ภาพทางการ: ราชบุรี', url: '/images/tours/ratchaburi.jpg' },
+  { label: '🌸 ภาพทางการ: สมุทรสงคราม', url: '/images/tours/samut-songkhram.jpg' },
+  { label: '🛍️ ตลาดดอนหวายริมน้ำ (นครปฐม)', url: 'https://images.unsplash.com/photo-1552465011-b4e21bf6e79a?auto=format&fit=crop&w=800&q=80' },
   { label: '🏛️ วัดไชยวัฒนาราม (อยุธยา)', url: 'https://images.unsplash.com/photo-1596422846543-75c6fc197f07?auto=format&fit=crop&w=800&q=80' },
-  { label: '🛕 พระนอนวัดใหญ่ชัยมงคล', url: 'https://images.unsplash.com/photo-1508009603885-50cf7c579365?auto=format&fit=crop&w=800&q=80' },
   { label: '🏺 โรงโอ่งมังกร / งานคราฟต์ (ราชบุรี)', url: 'https://images.unsplash.com/photo-1565193566173-7a0ee3dbe261?auto=format&fit=crop&w=800&q=80' },
-  { label: '🌿 ธรรมชาติสวนผึ้ง', url: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=800&q=80' },
-  { label: '⛵ ตลาดน้ำอัมพวา (สมุทรสงคราม)', url: 'https://images.unsplash.com/photo-1528181304800-259b08848526?auto=format&fit=crop&w=800&q=80' },
-  { label: '🌅 วิถีคลองแม่กลอง', url: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80' }
+  { label: '⛵ ตลาดน้ำอัมพวา (สมุทรสงคราม)', url: 'https://images.unsplash.com/photo-1508009603885-50cf7c579365?auto=format&fit=crop&w=800&q=80' }
 ];
 
 export default function AdminDashboard({ onBackToHome, onLogout, onToursUpdated, tours: propTours }) {

@@ -144,10 +144,16 @@ export function getStoredTours() {
     }
     const parsed = JSON.parse(raw);
     const tourList = Array.isArray(parsed) && parsed.length > 0 ? parsed : TOURS_DATA;
+    const officialMap = {
+      'tour-nakhon-pathom': '/images/tours/nakhon-pathom.jpg',
+      'tour-ayutthaya': '/images/tours/ayutthaya.jpg',
+      'tour-ratchaburi': '/images/tours/ratchaburi.jpg',
+      'tour-samut-songkhram': '/images/tours/samut-songkhram.jpg'
+    };
     _cachedTours = tourList.map(t => {
       let img = t.image;
-      if (t.id === 'tour-nakhon-pathom' && img && img.includes('photo-1544644181-1484b3fdfc62')) {
-        img = 'https://images.unsplash.com/photo-1552465011-b4e21bf6e79a?auto=format&fit=crop&w=800&q=80';
+      if (officialMap[t.id] && (!img || img.includes('unsplash.com'))) {
+        img = officialMap[t.id];
       }
       return {
         ...t,
