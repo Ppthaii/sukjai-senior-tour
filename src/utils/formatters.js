@@ -1,8 +1,9 @@
 // ฟังก์ชันช่วยเหลือสำหรับจัดรูปแบบข้อมูล
 
 export function formatPrice(price) {
-  if (typeof price !== 'number') return '0 บาท';
-  return price.toLocaleString('th-TH') + ' บาท';
+  const num = typeof price === 'number' ? price : parseInt(String(price || 0).replace(/[^0-9]/g, ''), 10);
+  if (isNaN(num)) return '0 บาท';
+  return num.toLocaleString('th-TH') + ' บาท';
 }
 
 export function generateBookingId() {

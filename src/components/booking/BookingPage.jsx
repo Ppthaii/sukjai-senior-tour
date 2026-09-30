@@ -34,6 +34,18 @@ function getOccupiedSeatsList(bookings, tour) {
 }
 
 export default function BookingPage({ tour, currentUser, onCancel, onBookingSuccess, onOpenProfile }) {
+  if (!tour) {
+    return (
+      <div className="container" style={{ textAlign: 'center', padding: '5rem 1rem' }}>
+        <h3 style={{ color: 'var(--color-primary, #9c3858)' }}>ไม่พบข้อมูลทัวร์</h3>
+        <p style={{ color: '#64748b', marginTop: '0.5rem' }}>กรุณากลับไปเลือกโปรแกรมทัวร์ที่หน้าแรกก่อนทำการจอง</p>
+        <button type="button" className="btn-primary" onClick={onCancel} style={{ marginTop: '1.25rem', padding: '0.65rem 1.5rem' }}>
+          กลับสู่หน้าหลัก
+        </button>
+      </div>
+    );
+  }
+
   const [step, setStep] = useState(1);
 
   // Single-trip model: specific travel date

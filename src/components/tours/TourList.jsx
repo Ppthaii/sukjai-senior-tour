@@ -3,10 +3,12 @@ import TourCard from './TourCard';
 import './tours.css';
 
 export default function TourList({
-  tours,
+  tours = [],
   onViewDetails,
   onBook
 }) {
+  const safeTours = Array.isArray(tours) ? tours : [];
+
   return (
     <section id="tours" className="tours-section">
       <div className="container">
@@ -14,7 +16,7 @@ export default function TourList({
           <h2 className="section-title">โปรแกรมทัวร์</h2>
         </div>
 
-        {tours.length === 0 ? (
+        {safeTours.length === 0 ? (
           <div style={{
             textAlign: 'center',
             padding: '3rem 1rem',
@@ -28,7 +30,7 @@ export default function TourList({
           </div>
         ) : (
           <div className="tours-grid">
-            {tours.map((tour) => (
+            {safeTours.map((tour) => (
               <TourCard
                 key={tour.id}
                 tour={tour}

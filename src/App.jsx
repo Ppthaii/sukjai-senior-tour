@@ -52,6 +52,13 @@ export default function App() {
     document.documentElement.setAttribute('data-font-size', fontSize);
   }, [fontSize]);
 
+  // Safety fallback: if currentView is 'detail' or 'booking' but selectedTour is null, redirect to 'home'
+  useEffect(() => {
+    if ((currentView === 'detail' || currentView === 'booking') && !selectedTour) {
+      setCurrentView('home');
+    }
+  }, [currentView, selectedTour]);
+
   // ซิงค์ข้อมูลกับคลาวด์อัตโนมัติเมื่อเปิดแอป และรับฟังการอัปเดตทัวร์แบบเรียลไทม์
   useEffect(() => {
     initAutoCloudSync((cloudTours) => {

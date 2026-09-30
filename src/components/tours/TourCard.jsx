@@ -3,6 +3,7 @@ import { Star, HeartPulse, Accessibility, Clock, Calendar } from 'lucide-react';
 import { formatPrice } from '../../utils/formatters';
 
 export default function TourCard({ tour, onSelectTour, onStartBooking }) {
+  if (!tour) return null;
   const displayDate = tour.travelDate || tour.departureDate || (Array.isArray(tour.departureDates) && tour.departureDates[0]) || '18 เมษายน 2569';
 
   return (
