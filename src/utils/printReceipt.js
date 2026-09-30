@@ -236,7 +236,7 @@ export function printBookingReceipt(booking) {
       <div class="tour-hero-box">
         <div class="tour-name">${booking.tourTitle || 'โปรแกรมทัวร์เพื่อผู้สูงอายุ'}</div>
         <div class="tour-meta">
-          🗓️ <strong>รอบวันเดินทาง:</strong> ${booking.departureDate || '-'} | 
+          🗓️ <strong>รูปแบบการเดินทาง:</strong> ${booking.departureDate || 'ทริป 1 วัน (ไปเช้า-เย็นกลับ)'} | 
           ⏱️ <strong>ระยะเวลา:</strong> ${booking.tourDuration || '1 วัน (ไปเช้า-เย็นกลับ)'}
         </div>
       </div>

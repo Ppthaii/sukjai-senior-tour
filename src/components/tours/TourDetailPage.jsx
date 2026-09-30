@@ -132,25 +132,22 @@ export default function TourDetailPage({ tour, onBack, onBook }) {
               )}
             </div>
 
-            {/* Departure Dates */}
-            {tour.departureDates && tour.departureDates.length > 0 && (
-              <div className="detail-section">
-                <h2 className="detail-section-title">
-                  📅 รอบวันเดินทางที่เปิดรับ
-                </h2>
-                <div className="dates-grid">
-                  {tour.departureDates.map((date, idx) => (
-                    <div key={idx} className="date-card">
-                      <div className="date-text">
-                        <Calendar size={18} color="var(--color-primary)" />
-                        <span>{date}</span>
-                      </div>
-                      <span className="badge-available">เปิดรับจอง</span>
-                    </div>
-                  ))}
+            {/* Trip Type Info - Single Day Trip */}
+            <div className="detail-section" style={{ background: '#f8fafc', padding: '1.25rem 1.5rem', borderRadius: '16px', border: '1px solid #e2e8f0', marginBottom: '1.5rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
+                <div style={{ background: 'var(--color-primary-light, #e0f2fe)', padding: '0.65rem', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Clock size={24} color="var(--color-primary)" />
+                </div>
+                <div>
+                  <h3 style={{ fontSize: '1.15rem', color: 'var(--color-primary)', margin: 0, fontWeight: '700' }}>
+                    รูปแบบการเดินทาง: ทริป 1 วัน (ไปเช้า-เย็นกลับ)
+                  </h3>
+                  <p style={{ margin: '0.25rem 0 0', color: 'var(--color-text-muted)', fontSize: '0.92rem' }}>
+                    ทริปพิเศษครั้งเดียวตามรายงานแผนการตลาด พร้อมจุดพักผ่อนและดูแลสุขภาพตลอดเส้นทาง
+                  </p>
                 </div>
               </div>
-            )}
+            </div>
 
             {/* Bottom Book Action */}
             <div className="detail-action-footer">

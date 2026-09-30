@@ -51,8 +51,8 @@ export default function TicketPage({ booking, onBackHome }) {
             </div>
             
             <div className="ticket-field">
-              <span className="ticket-label">วันเดินทาง (Departure Date)</span>
-              <span className="ticket-value">{booking.departureDate}</span>
+              <span className="ticket-label">รูปแบบการเดินทาง (Tour Type)</span>
+              <span className="ticket-value">{booking.departureDate || 'ทริป 1 วัน (ไปเช้า-เย็นกลับ)'}</span>
             </div>
 
             <div className="ticket-field">

@@ -53,10 +53,10 @@ export default function TicketModal({ booking, onClose }) {
 
           <div className="ticket-info-grid">
             <div className="ticket-info-item">
-              <span className="ticket-label">วันเวลาออกเดินทาง</span>
+              <span className="ticket-label">รูปแบบการเดินทาง</span>
               <span className="ticket-value">
                 <Calendar size={16} style={{ display: 'inline', verticalAlign: 'middle', marginRight: '4px' }} />
-                {booking.departureDate}
+                {booking.departureDate || 'ทริป 1 วัน (ไปเช้า-เย็นกลับ)'}
               </span>
             </div>
 

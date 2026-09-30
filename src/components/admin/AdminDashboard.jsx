@@ -1995,17 +1995,23 @@ export default function AdminDashboard({ onBackToHome, onLogout, onToursUpdated 
                       </div>
                     </div>
 
-                    {/* Departure Dates */}
+                    {/* Departure Dates / Trip Type */}
                     <div>
                       <div style={{ fontWeight: 700, color: '#0f172a', marginBottom: '0.4rem', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                        <Calendar size={17} color="var(--color-primary, #9c3858)" /> รอบวันเดินทางที่เปิดรับจอง:
+                        <Clock size={17} color="var(--color-primary, #9c3858)" /> รูปแบบการเดินทาง:
                       </div>
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem' }}>
-                        {previewTour.departureDates.map((d, idx) => (
-                          <span key={idx} style={{ background: '#e0f2fe', color: '#0369a1', padding: '0.3rem 0.75rem', borderRadius: '8px', fontSize: '0.82rem', fontWeight: 600 }}>
-                            {d}
+                        {Array.isArray(previewTour.departureDates) && previewTour.departureDates.length > 0 ? (
+                          previewTour.departureDates.map((d, idx) => (
+                            <span key={idx} style={{ background: '#e0f2fe', color: '#0369a1', padding: '0.3rem 0.75rem', borderRadius: '8px', fontSize: '0.82rem', fontWeight: 600 }}>
+                              {d}
+                            </span>
+                          ))
+                        ) : (
+                          <span style={{ background: '#ecfdf5', color: '#047857', padding: '0.3rem 0.75rem', borderRadius: '8px', fontSize: '0.82rem', fontWeight: 600 }}>
+                            ทริป 1 วัน (ไปเช้า-เย็นกลับ) - เดินทางครั้งเดียว
                           </span>
-                        ))}
+                        )}
                       </div>
                     </div>
 

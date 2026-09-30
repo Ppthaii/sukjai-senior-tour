@@ -7,10 +7,10 @@ import BusSeatMap from './BusSeatMap';
 import './booking.css';
 
 // Helper to compute occupied seat aliases (e.g. "1A" <-> "A1")
-function getOccupiedSeatsList(bookings, tour, targetDate) {
+function getOccupiedSeatsList(bookings, tour) {
   if (!bookings || !tour) return [];
   return bookings
-    .filter(b => (b.tourId === tour?.id || b.tourTitle === tour?.title) && b.departureDate === targetDate)
+    .filter(b => b.tourId === tour?.id || b.tourTitle === tour?.title)
     .flatMap(b => {
       const list = [];
       if (Array.isArray(b.selectedSeats)) list.push(...b.selectedSeats);
@@ -36,8 +36,8 @@ function getOccupiedSeatsList(bookings, tour, targetDate) {
 export default function BookingPage({ tour, currentUser, onCancel, onBookingSuccess, onOpenProfile }) {
   const [step, setStep] = useState(1);
 
-  // Form States
-  const [departureDate, setDepartureDate] = useState(() => tour?.departureDates?.[0] || '18 เมษายน 2026');
+  // Single-trip model: no multiple rounds
+  const departureDate = tour?.duration ? `ทริป ${tour.duration}` : 'ทริป 1 วัน (ไปเช้า-เย็นกลับ)';
   
   // Seat Selection
   const [selectedSeats, setSelectedSeats] = useState([]);
@@ -57,17 +57,10 @@ export default function BookingPage({ tour, currentUser, onCancel, onBookingSucc
     };
   }, []);
 
-  // Compute occupied seats for this tour on this specific departureDate
+  // Compute occupied seats for this tour
   const occupiedSeats = useMemo(() => {
-    return getOccupiedSeatsList(allBookings, tour, departureDate);
-  }, [allBookings, tour, departureDate]);
-
-  // Handle changing departure date without cascading effect
-  const handleDateChange = (newDate) => {
-    setDepartureDate(newDate);
-    const newOccupied = getOccupiedSeatsList(allBookings, tour, newDate);
-    setSelectedSeats(prev => prev.filter(seat => !newOccupied.includes(seat)));
-  };
+    return getOccupiedSeatsList(allBookings, tour);
+  }, [allBookings, tour]);
 
   // Traveler Details (Read-only from member profile)
   const leadName = currentUser?.name || '';
@@ -243,36 +236,10 @@ export default function BookingPage({ tour, currentUser, onCancel, onBookingSucc
           {/* STEP 1: Seat Selection */}
           {step === 1 && (
             <>
-              {Array.isArray(tour?.departureDates) && tour.departureDates.length > 1 && (
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '0.6rem',
-                  marginBottom: '0.85rem',
-                  flexWrap: 'wrap',
-                  background: '#f8fafc',
-                  padding: '0.5rem 1rem',
-                  borderRadius: '12px',
-                  border: '1px solid #e2e8f0'
-                }}>
-                  <span style={{ fontSize: '0.92rem', fontWeight: '700', color: 'var(--color-primary)', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                    <Calendar size={16} /> เลือกรอบวันเดินทาง:
-                  </span>
-                  <select
-                    className="form-control"
-                    style={{ maxWidth: '250px', padding: '0.4rem 0.75rem', fontSize: '0.92rem', fontWeight: '600' }}
-                    value={departureDate}
-                    onChange={(e) => handleDateChange(e.target.value)}
-                  >
-                    {tour.departureDates.map((date, idx) => (
-                      <option key={idx} value={date}>{date}</option>
-                    ))}
-                  </select>
-                </div>
-              )}
-
-              <div style={{ textAlign: 'center', marginBottom: '0.5rem' }}>
+              <div style={{ textAlign: 'center', marginBottom: '0.75rem', marginTop: '0.25rem' }}>
+                <span className="badge-available" style={{ display: 'inline-block', marginBottom: '0.5rem', padding: '0.35rem 0.85rem', fontSize: '0.88rem' }}>
+                  🚌 ทริป 1 วัน (ไปเช้า-เย็นกลับ)
+                </span>
                 <h3 style={{ fontSize: '1.25rem', color: 'var(--color-primary)', marginBottom: '0.2rem' }}>
                   แตะเลือกที่นั่งของคุณ
                 </h3>
@@ -598,7 +565,7 @@ export default function BookingPage({ tour, currentUser, onCancel, onBookingSucc
                   <strong>{tour.title}</strong>
                 </div>
                 <div className="summary-row">
-                  <span>วันเดินทาง:</span>
+                  <span>รูปแบบทริป:</span>
                   <strong>{departureDate}</strong>
                 </div>
                 <div className="summary-row">

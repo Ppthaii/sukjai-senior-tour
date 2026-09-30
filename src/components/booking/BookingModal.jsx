@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Calendar, Users, HeartPulse, Check, ArrowRight, ArrowLeft, QrCode } from 'lucide-react';
+import { X, Calendar, Users, HeartPulse, Check, ArrowRight, ArrowLeft, QrCode, Clock } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { formatPrice, generateBookingId } from '../../utils/formatters';
 import { saveBooking } from '../../utils/storage';
@@ -8,8 +8,8 @@ import './booking.css';
 export default function BookingModal({ tour, onClose, onBookingSuccess }) {
   const [step, setStep] = useState(1);
 
-  // Form States
-  const [departureDate, setDepartureDate] = useState(tour?.departureDates?.[0] || '');
+  // Single-trip model
+  const departureDate = tour?.duration ? `ทริป ${tour.duration}` : 'ทริป 1 วัน (ไปเช้า-เย็นกลับ)';
   const [travelersCount, setTravelersCount] = useState(1);
   const [leadName, setLeadName] = useState('');
   const [leadAge, setLeadAge] = useState('');
@@ -115,7 +115,7 @@ export default function BookingModal({ tour, onClose, onBookingSuccess }) {
         <div className="booking-steps-bar">
           <div className={`step-indicator-item ${step === 1 ? 'active' : step > 1 ? 'done' : ''}`}>
             <span className="step-num-badge">{step > 1 ? '✓' : '1'}</span>
-            <span>รอบเดินทาง & จำนวน</span>
+            <span>จำนวนผู้เดินทาง</span>
           </div>
           <div className={`step-indicator-item ${step === 2 ? 'active' : step > 2 ? 'done' : ''}`}>
             <span className="step-num-badge">{step > 2 ? '✓' : '2'}</span>
@@ -131,21 +131,12 @@ export default function BookingModal({ tour, onClose, onBookingSuccess }) {
           {/* STEP 1: Date & Travelers */}
           {step === 1 && (
             <>
-              <div className="form-group">
-                <label className="form-label" htmlFor="select-departure-date">
-                  <Calendar size={18} style={{ display: 'inline', verticalAlign: 'middle', marginRight: '6px' }} />
-                  เลือกรอบวันที่เดินทาง
-                </label>
-                <select
-                  id="select-departure-date"
-                  className="form-control"
-                  value={departureDate}
-                  onChange={(e) => setDepartureDate(e.target.value)}
-                >
-                  {tour.departureDates.map((date, idx) => (
-                    <option key={idx} value={date}>{date}</option>
-                  ))}
-                </select>
+              <div style={{ background: '#f8fafc', padding: '0.85rem 1rem', borderRadius: '12px', border: '1px solid #e2e8f0', marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+                <Clock size={20} color="var(--color-primary)" />
+                <div>
+                  <div style={{ fontWeight: '700', color: 'var(--color-primary)', fontSize: '0.95rem' }}>รูปแบบการเดินทาง: ทริป 1 วัน (ไปเช้า-เย็นกลับ)</div>
+                  <div style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)' }}>เดินทางครั้งเดียว ไม่ต้องเลือกรอบ สะดวกสบายตลอดเส้นทาง</div>
+                </div>
               </div>
 
               <div className="form-group">
@@ -370,7 +361,7 @@ export default function BookingModal({ tour, onClose, onBookingSuccess }) {
                   <strong>{tour.title}</strong>
                 </div>
                 <div className="summary-row">
-                  <span>วันเดินทาง:</span>
+                  <span>รูปแบบทริป:</span>
                   <strong>{departureDate}</strong>
                 </div>
                 <div className="summary-row">
