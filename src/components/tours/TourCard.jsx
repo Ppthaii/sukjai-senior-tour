@@ -1,8 +1,10 @@
 import React from 'react';
-import { Star, HeartPulse, Accessibility, Clock } from 'lucide-react';
+import { Star, HeartPulse, Accessibility, Clock, Calendar } from 'lucide-react';
 import { formatPrice } from '../../utils/formatters';
 
 export default function TourCard({ tour, onSelectTour, onStartBooking }) {
+  const displayDate = tour.travelDate || tour.departureDate || (Array.isArray(tour.departureDates) && tour.departureDates[0]) || '18 เมษายน 2569';
+
   return (
     <article className="tour-card" aria-label={tour.title}>
       <div className="tour-img-container" onClick={() => onSelectTour(tour)} style={{ cursor: 'pointer' }}>
@@ -19,9 +21,28 @@ export default function TourCard({ tour, onSelectTour, onStartBooking }) {
       </div>
 
       <div className="tour-card-body">
-        <h3 className="tour-title" onClick={() => onSelectTour(tour)} style={{ cursor: 'pointer' }}>
+        <h3 className="tour-title" onClick={() => onSelectTour(tour)} style={{ cursor: 'pointer', marginBottom: '0.4rem' }}>
           {tour.title}
         </h3>
+
+        {/* Travel Date Badge */}
+        <div style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: '0.4rem',
+          background: '#fdf2f8',
+          color: 'var(--color-primary, #9c3858)',
+          border: '1px solid #fbcfe8',
+          padding: '0.3rem 0.65rem',
+          borderRadius: '8px',
+          fontSize: '0.86rem',
+          fontWeight: 700,
+          marginBottom: '0.65rem',
+          width: 'fit-content'
+        }}>
+          <Calendar size={14} color="var(--color-primary, #9c3858)" />
+          <span>วันเดินทาง: {displayDate}</span>
+        </div>
 
         {/* Minimal Badges */}
         <div className="tour-care-badges">

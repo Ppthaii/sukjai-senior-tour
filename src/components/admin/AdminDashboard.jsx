@@ -172,6 +172,7 @@ export default function AdminDashboard({ onBackToHome, onLogout, onToursUpdated 
   const [formDuration, setFormDuration] = useState('1 วัน (ไปเช้า-เย็นกลับ)');
   const [formImage, setFormImage] = useState('');
   const [formTagline, setFormTagline] = useState('');
+  const [formTravelDate, setFormTravelDate] = useState('วันเสาร์ที่ 18 เมษายน 2569');
 
   // Form Fields - Detailed Dynamic Lists
   const [formItinerary, setFormItinerary] = useState(DEFAULT_ITINERARY);
@@ -243,6 +244,8 @@ export default function AdminDashboard({ onBackToHome, onLogout, onToursUpdated 
     price: parseInt(String(formPrice).replace(/[^0-9]/g, ''), 10) || 0,
     originalPrice: parseInt(String(formOriginalPrice).replace(/[^0-9]/g, ''), 10) || (parseInt(String(formPrice).replace(/[^0-9]/g, ''), 10) + 600 || 0),
     duration: formDuration.trim() || '1 วัน (ไปเช้า-เย็นกลับ)',
+    travelDate: formTravelDate.trim() || 'วันเสาร์ที่ 18 เมษายน 2569',
+    departureDate: formTravelDate.trim() || '18 เมษายน 2569',
     image: formImage.trim() || 'https://images.unsplash.com/photo-1544644181-1484b3fdfc62?auto=format&fit=crop&w=800&q=80',
     tagline: formTagline.trim() || `ท่องเที่ยวพักผ่อน จ.${formDestination || 'ปลายทาง'} สำหรับผู้สูงวัย`,
     rating: 4.96,
@@ -253,7 +256,7 @@ export default function AdminDashboard({ onBackToHome, onLogout, onToursUpdated 
     itinerary: formItinerary.filter(i => i.time.trim() || i.activity.trim()),
     highlights: formHighlightsList.filter(h => h.trim()),
     medicalCare: formMedicalCareList.filter(m => m.trim()),
-    departureDates: formDepartureDatesList.filter(d => d.trim())
+    departureDates: [formTravelDate.trim() || '18 เมษายน 2569']
   };
 
   // Open Modal for Creating a New Tour
@@ -267,12 +270,13 @@ export default function AdminDashboard({ onBackToHome, onLogout, onToursUpdated 
     setFormPrice('');
     setFormOriginalPrice('');
     setFormDuration('1 วัน (ไปเช้า-เย็นกลับ)');
+    setFormTravelDate('วันเสาร์ที่ 18 เมษายน 2569');
     setFormImage('https://images.unsplash.com/photo-1544644181-1484b3fdfc62?auto=format&fit=crop&w=800&q=80');
     setFormTagline('');
     setFormItinerary([...DEFAULT_ITINERARY]);
     setFormHighlightsList(['ไหว้พระทำบุญเสริมสิริมงคล', 'กิจกรรม Workshop งานฝีมือ', 'แวะซื้อของฝากท้องถิ่น']);
     setFormMedicalCareList([...PRESET_MEDICAL]);
-    setFormDepartureDatesList(['18 เมษายน 2026', '26 เมษายน 2026', '2 พฤษภาคม 2026']);
+    setFormDepartureDatesList(['18 เมษายน 2569']);
     setIsModalOpen(true);
   };
 
@@ -287,6 +291,7 @@ export default function AdminDashboard({ onBackToHome, onLogout, onToursUpdated 
     setFormPrice(String(tour.price || ''));
     setFormOriginalPrice(String(tour.originalPrice || ''));
     setFormDuration(tour.duration || '1 วัน (ไปเช้า-เย็นกลับ)');
+    setFormTravelDate(tour.travelDate || tour.departureDate || (Array.isArray(tour.departureDates) && tour.departureDates[0]) || 'วันเสาร์ที่ 18 เมษายน 2569');
     setFormImage(tour.image || '');
     setFormTagline(tour.tagline || '');
     
@@ -294,7 +299,7 @@ export default function AdminDashboard({ onBackToHome, onLogout, onToursUpdated 
     setFormItinerary(Array.isArray(tour.itinerary) && tour.itinerary.length > 0 ? [...tour.itinerary] : [...DEFAULT_ITINERARY]);
     setFormHighlightsList(Array.isArray(tour.highlights) && tour.highlights.length > 0 ? [...tour.highlights] : ['ไหว้พระทำบุญ', 'กิจกรรม Workshop']);
     setFormMedicalCareList(Array.isArray(tour.medicalCare) && tour.medicalCare.length > 0 ? [...tour.medicalCare] : [...PRESET_MEDICAL]);
-    setFormDepartureDatesList(Array.isArray(tour.departureDates) && tour.departureDates.length > 0 ? [...tour.departureDates] : ['18 เมษายน 2026']);
+    setFormDepartureDatesList(Array.isArray(tour.departureDates) && tour.departureDates.length > 0 ? [...tour.departureDates] : [tour.travelDate || '18 เมษายน 2569']);
     
     setIsModalOpen(true);
   };
@@ -497,7 +502,9 @@ export default function AdminDashboard({ onBackToHome, onLogout, onToursUpdated 
       itinerary: formItinerary.filter(i => i.time.trim() || i.activity.trim()),
       highlights: formHighlightsList.filter(h => h.trim()),
       medicalCare: formMedicalCareList.filter(m => m.trim()),
-      departureDates: formDepartureDatesList.filter(d => d.trim())
+      travelDate: formTravelDate.trim() || 'วันเสาร์ที่ 18 เมษายน 2569',
+      departureDate: formTravelDate.trim() || '18 เมษายน 2569',
+      departureDates: [formTravelDate.trim() || '18 เมษายน 2569']
     };
 
     if (modalMode === 'edit') {
@@ -1435,6 +1442,23 @@ export default function AdminDashboard({ onBackToHome, onLogout, onToursUpdated 
                     value={formDuration}
                     onChange={(e) => setFormDuration(e.target.value)}
                   />
+                </div>
+
+                <div className="admin-form-group">
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#0f172a', fontWeight: 700 }}>
+                    <Calendar size={16} color="var(--color-primary, #9c3858)" /> วันเดินทางของทริป * (แสดงที่หน้าเว็บให้ลูกค้าเห็น)
+                  </label>
+                  <input 
+                    type="text" 
+                    className="admin-form-input" 
+                    placeholder="เช่น วันเสาร์ที่ 18 เมษายน 2569"
+                    value={formTravelDate}
+                    onChange={(e) => setFormTravelDate(e.target.value)}
+                    required
+                  />
+                  <span style={{ fontSize: '0.8rem', color: '#64748b' }}>
+                    ระบุวันเดินทางของทริปนี้ เช่น วันเสาร์ที่ 18 เมษายน 2569 ข้อมูลจะปรากฏบนการ์ดทัวร์และหน้ารายละเอียดของลูกค้าทันที
+                  </span>
                 </div>
 
                 <div className="admin-form-group">

@@ -33,6 +33,9 @@ export default function TourDetailPage({ tour, onBack, onBook }) {
                 <h1 className="detail-title">{tour.title}</h1>
                 <p className="detail-tagline">{tour.tagline}</p>
                 <div className="detail-meta">
+                  <span className="meta-item" style={{ background: '#fdf2f8', color: 'var(--color-primary, #9c3858)', fontWeight: 700, border: '1px solid #fbcfe8' }}>
+                    <Calendar size={17} color="var(--color-primary, #9c3858)" /> วันเดินทาง: {tour.travelDate || tour.departureDate || (Array.isArray(tour.departureDates) && tour.departureDates[0]) || '18 เมษายน 2569'}
+                  </span>
                   <span className="meta-item">
                     <Map size={17} /> {tour.destination} ({tour.region})
                   </span>
@@ -116,18 +119,21 @@ export default function TourDetailPage({ tour, onBack, onBook }) {
               )}
             </div>
 
-            {/* Trip Type Info - Single Day Trip */}
-            <div className="detail-section" style={{ background: '#f8fafc', padding: '1.25rem 1.5rem', borderRadius: '16px', border: '1px solid #e2e8f0', marginBottom: '1.5rem' }}>
+            {/* Trip Date & Departure Schedule Banner */}
+            <div className="detail-section" style={{ background: '#fdf2f8', padding: '1.25rem 1.5rem', borderRadius: '16px', border: '1.5px solid #fbcfe8', marginBottom: '1.5rem' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
-                <div style={{ background: 'var(--color-primary-light, #e0f2fe)', padding: '0.65rem', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <Clock size={24} color="var(--color-primary)" />
+                <div style={{ background: 'var(--color-primary, #9c3858)', color: '#fff', padding: '0.75rem', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Calendar size={26} />
                 </div>
                 <div>
-                  <h3 style={{ fontSize: '1.15rem', color: 'var(--color-primary)', margin: 0, fontWeight: '700' }}>
-                    รูปแบบการเดินทาง: ทริป 1 วัน (ไปเช้า-เย็นกลับ)
+                  <div style={{ fontSize: '0.82rem', color: 'var(--color-primary, #9c3858)', fontWeight: 700 }}>
+                    กำหนดการออกเดินทาง (ทริปจัดครั้งเดียว)
+                  </div>
+                  <h3 style={{ fontSize: '1.25rem', color: '#0f172a', margin: '0.2rem 0 0', fontWeight: 800 }}>
+                    {tour.travelDate || tour.departureDate || (Array.isArray(tour.departureDates) && tour.departureDates[0]) || 'วันเสาร์ที่ 18 เมษายน 2569'}
                   </h3>
-                  <p style={{ margin: '0.25rem 0 0', color: 'var(--color-text-muted)', fontSize: '0.92rem' }}>
-                    ทริปพิเศษครั้งเดียวตามรายงานแผนการตลาด พร้อมจุดพักผ่อนและดูแลสุขภาพตลอดเส้นทาง
+                  <p style={{ margin: '0.25rem 0 0', color: '#64748b', fontSize: '0.92rem' }}>
+                    เวลานัดหมาย 06:30 น. ณ จุดนัดหมายสถานีขนส่งหมอชิต (เดินทางกลับถึงกรุงเทพฯ ~17:00 น.)
                   </p>
                 </div>
               </div>

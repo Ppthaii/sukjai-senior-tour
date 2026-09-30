@@ -36,8 +36,8 @@ function getOccupiedSeatsList(bookings, tour) {
 export default function BookingPage({ tour, currentUser, onCancel, onBookingSuccess, onOpenProfile }) {
   const [step, setStep] = useState(1);
 
-  // Single-trip model: no multiple rounds
-  const departureDate = tour?.duration ? `ทริป ${tour.duration}` : 'ทริป 1 วัน (ไปเช้า-เย็นกลับ)';
+  // Single-trip model: specific travel date
+  const departureDate = tour?.travelDate || tour?.departureDate || (Array.isArray(tour?.departureDates) && tour.departureDates[0]) || 'วันเสาร์ที่ 18 เมษายน 2569';
   
   // Seat Selection
   const [selectedSeats, setSelectedSeats] = useState([]);
@@ -237,8 +237,8 @@ export default function BookingPage({ tour, currentUser, onCancel, onBookingSucc
           {step === 1 && (
             <>
               <div style={{ textAlign: 'center', marginBottom: '0.75rem', marginTop: '0.25rem' }}>
-                <span className="badge-available" style={{ display: 'inline-block', marginBottom: '0.5rem', padding: '0.35rem 0.85rem', fontSize: '0.88rem' }}>
-                  🚌 ทริป 1 วัน (ไปเช้า-เย็นกลับ)
+                <span className="badge-available" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.5rem', padding: '0.4rem 0.95rem', fontSize: '0.92rem', fontWeight: 700 }}>
+                  <Calendar size={15} /> วันเดินทาง: {departureDate}
                 </span>
                 <h3 style={{ fontSize: '1.25rem', color: 'var(--color-primary)', marginBottom: '0.2rem' }}>
                   แตะเลือกที่นั่งของคุณ

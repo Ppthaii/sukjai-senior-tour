@@ -9,7 +9,7 @@
  * @param {number} quality - คุณภาพของภาพ 0.1 - 1.0 (ค่าเริ่มต้น 0.78)
  * @returns {Promise<string>} DataURL ของภาพที่บีบอัดแล้ว
  */
-export function compressImage(imageSource, maxDimension = 1000, quality = 0.78) {
+export function compressImage(imageSource, maxDimension = 800, quality = 0.72) {
   return new Promise((resolve, reject) => {
     // กรณีเป็น URL ภายนอก (http:// หรือ https://) ที่ไม่ใช่ DataURL
     if (typeof imageSource === 'string' && (imageSource.startsWith('http://') || imageSource.startsWith('https://'))) {

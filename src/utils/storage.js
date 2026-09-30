@@ -166,7 +166,7 @@ export function saveStoredTours(tours) {
       console.warn("Storage quota warning! ปรับแต่งขนาดรูปภาพเพื่อรักษาข้อมูลทริปและกำหนดการ...", quotaError);
       // หากเนื้อที่เต็มเนื่องจากภาพ Base64 ขนาดใหญ่ ให้ย่อหรือใช้ภาพสำรองเพื่อป้องกันข้อมูลกำหนดการสูญหาย
       const sanitized = tours.map(t => {
-        if (typeof t.image === 'string' && t.image.length > 200000) {
+        if (typeof t.image === 'string' && t.image.length > 800000) {
           return {
             ...t,
             image: 'https://images.unsplash.com/photo-1544644181-1484b3fdfc62?auto=format&fit=crop&w=800&q=80'
@@ -655,10 +655,6 @@ export async function initAutoCloudSync(onToursUpdated) {
         console.warn('Quota warning caching cloud tours:', err);
       }
       if (onToursUpdated) onToursUpdated(cloudTours);
-    } else {
-      // ถ้าบนคลาวด์ยังว่างอยู่ ให้เริ่มอัปโหลดทัวร์ตั้งต้นขึ้นไป
-      const localTours = getStoredTours();
-      pushCloudTours(localTours).catch(() => {});
     }
 
     // 2. ดึงสมาชิกล่าสุดจาก Cloud ผสานเข้ากับ Local
