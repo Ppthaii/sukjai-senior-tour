@@ -158,6 +158,9 @@ export function getStoredTours() {
       }
       return {
         ...t,
+        medicalCare: Array.isArray(t.medicalCare)
+          ? t.medicalCare.filter(m => !m.includes('ตรวจวัดความดัน') && !m.includes('สัญญาณชีพ'))
+          : t.medicalCare,
         image: img,
         region: getRegionByProvince(t.destination || '')
       };
@@ -663,14 +666,24 @@ export async function initAutoCloudSync(onToursUpdated) {
 
       const mergedTours = cloudTours.map(ct => {
         const def = defaultMap[ct.id];
-        if (!def) return ct; // ทัวร์ที่ admin สร้างเอง ไม่มี default
+        if (!def) {
+          return {
+            ...ct,
+            medicalCare: Array.isArray(ct.medicalCare)
+              ? ct.medicalCare.filter(m => !m.includes('ตรวจวัดความดัน') && !m.includes('สัญญาณชีพ'))
+              : ct.medicalCare
+          };
+        }
+        const medCare = (Array.isArray(ct.medicalCare) && ct.medicalCare.length > 0) ? ct.medicalCare : def.medicalCare;
         return {
           ...def,   // ข้อมูลเริ่มต้นครบทุก field
           ...ct,    // ข้อมูลจาก cloud ทับทุกอย่างที่มี
           // ถ้า cloud ไม่มี field สำคัญ ให้ดึงจาก default
           itinerary: (Array.isArray(ct.itinerary) && ct.itinerary.length > 0) ? ct.itinerary : def.itinerary,
           highlights: (Array.isArray(ct.highlights) && ct.highlights.length > 0) ? ct.highlights : def.highlights,
-          medicalCare: (Array.isArray(ct.medicalCare) && ct.medicalCare.length > 0) ? ct.medicalCare : def.medicalCare,
+          medicalCare: Array.isArray(medCare)
+            ? medCare.filter(m => !m.includes('ตรวจวัดความดัน') && !m.includes('สัญญาณชีพ'))
+            : def.medicalCare,
           tagline: ct.tagline || def.tagline,
           wheelchairFriendly: ct.wheelchairFriendly ?? def.wheelchairFriendly,
           hasNurse: ct.hasNurse ?? def.hasNurse,
