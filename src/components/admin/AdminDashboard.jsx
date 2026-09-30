@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { 
   ShieldCheck, Plus, Trash2, Edit3, Eye, LogOut, 
   MapPin, Calendar, Users, DollarSign, HeartPulse, Accessibility, 
@@ -66,11 +66,30 @@ const PRESET_SAMPLE_IMAGES = [
   { label: '🌅 วิถีคลองแม่กลอง', url: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80' }
 ];
 
-export default function AdminDashboard({ onBackToHome, onLogout, onToursUpdated }) {
+export default function AdminDashboard({ onBackToHome, onLogout, onToursUpdated, tours: propTours }) {
   const [activeTab, setActiveTab] = useState('tours'); // 'tours' or 'bookings'
-  const [tours, setTours] = useState(() => getStoredTours());
+  const [tours, setTours] = useState(() => (Array.isArray(propTours) && propTours.length > 0) ? propTours : getStoredTours());
   const [bookings, setBookings] = useState(() => getBookings());
   const passengersList = useMemo(() => expandBookingsToPassengers(bookings), [bookings]);
+
+  // Synchronize internal tours state with parent prop and cloud update events
+  useEffect(() => {
+    if (Array.isArray(propTours) && propTours.length > 0) {
+      setTours(propTours);
+    }
+  }, [propTours]);
+
+  useEffect(() => {
+    const handleSyncUpdate = (e) => {
+      if (Array.isArray(e.detail?.tours) && e.detail.tours.length > 0) {
+        setTours(e.detail.tours);
+      }
+    };
+    window.addEventListener('sukjai_tours_updated', handleSyncUpdate);
+    return () => {
+      window.removeEventListener('sukjai_tours_updated', handleSyncUpdate);
+    };
+  }, []);
 
   // Trip-based Bookings Grouping State
   const [selectedTripId, setSelectedTripId] = useState('all');
@@ -359,7 +378,7 @@ export default function AdminDashboard({ onBackToHome, onLogout, onToursUpdated 
 
 
   // Quick Price Edit in List
-  const handleSavePrice = (tourId) => {
+  const handleSavePrice = async (tourId) => {
     const num = parseInt(editPriceInput.replace(/[^0-9]/g, ''), 10);
     if (!num || num <= 0) {
       alert('กรุณากรอกราคาที่ถูกต้องครับ');
@@ -367,15 +386,15 @@ export default function AdminDashboard({ onBackToHome, onLogout, onToursUpdated 
     }
     const updated = tours.map(t => t.id === tourId ? { ...t, price: num } : t);
     setTours(updated);
-    saveStoredTours(updated);
+    await saveStoredTours(updated);
     if (onToursUpdated) onToursUpdated(updated);
     setEditingTourId(null);
   };
 
   // Delete Tour
-  const handleDeleteTour = (tourId, title) => {
+  const handleDeleteTour = async (tourId, title) => {
     if (window.confirm(`คุณแน่ใจหรือไม่ว่าต้องการลบโปรแกรมทัวร์ "${title}"?`)) {
-      const updated = deleteTour(tourId);
+      const updated = await deleteTour(tourId);
       setTours(updated);
       if (onToursUpdated) onToursUpdated(updated);
     }

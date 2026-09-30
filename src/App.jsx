@@ -189,6 +189,7 @@ export default function App() {
             onBackToHome={handleBackHome}
             onLogout={handleAdminLogout}
             onToursUpdated={(updatedTours) => setTours(updatedTours)}
+            tours={tours}
           />
         )}
 

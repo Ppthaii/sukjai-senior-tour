@@ -15,7 +15,7 @@ export const TOURS_DATA = [
     originalPrice: 4590,
     rating: 4.96,
     reviewsCount: 84,
-    image: "https://images.unsplash.com/photo-1544644181-1484b3fdfc62?auto=format&fit=crop&w=800&q=80",
+    image: "https://images.unsplash.com/photo-1552465011-b4e21bf6e79a?auto=format&fit=crop&w=800&q=80",
     wheelchairFriendly: true,
     hasNurse: true,
     vehicleType: "รถมินิบัส VIP สุขใจวัยเกษียณทัวร์",

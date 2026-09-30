@@ -144,10 +144,17 @@ export function getStoredTours() {
     }
     const parsed = JSON.parse(raw);
     const tourList = Array.isArray(parsed) && parsed.length > 0 ? parsed : TOURS_DATA;
-    _cachedTours = tourList.map(t => ({
-      ...t,
-      region: getRegionByProvince(t.destination || '')
-    }));
+    _cachedTours = tourList.map(t => {
+      let img = t.image;
+      if (t.id === 'tour-nakhon-pathom' && img && img.includes('photo-1544644181-1484b3fdfc62')) {
+        img = 'https://images.unsplash.com/photo-1552465011-b4e21bf6e79a?auto=format&fit=crop&w=800&q=80';
+      }
+      return {
+        ...t,
+        image: img,
+        region: getRegionByProvince(t.destination || '')
+      };
+    });
     return _cachedTours;
   } catch (e) {
     console.error("Failed to read tours", e);
@@ -647,6 +654,9 @@ export async function initAutoCloudSync(onToursUpdated) {
         console.warn('Quota warning caching cloud tours:', err);
       }
       if (onToursUpdated) onToursUpdated(cloudTours);
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('sukjai_tours_updated', { detail: { tours: cloudTours } }));
+      }
     }
 
     // 2. ดึงสมาชิกล่าสุดจาก Cloud ผสานเข้ากับ Local
