@@ -155,65 +155,55 @@ export function getStoredTours() {
   }
 }
 
-export function saveStoredTours(tours) {
+export async function saveStoredTours(tours) {
+  _cachedTours = tours;
+  
+  // 1. ส่งข้อมูลขึ้น Cloud ทันที เพื่อให้อุปกรณ์อื่น (iPad/มือถือ) ได้รูปใหม่แน่นอน
   try {
-    _cachedTours = tours;
-    
-    // พยายามบันทึกลง LocalStorage
-    try {
-      localStorage.setItem(TOURS_KEY, JSON.stringify(tours));
-    } catch (quotaError) {
-      console.warn("Storage quota warning! ปรับแต่งขนาดรูปภาพเพื่อรักษาข้อมูลทริปและกำหนดการ...", quotaError);
-      // หากเนื้อที่เต็มเนื่องจากภาพ Base64 ขนาดใหญ่ ให้ย่อหรือใช้ภาพสำรองเพื่อป้องกันข้อมูลกำหนดการสูญหาย
-      const sanitized = tours.map(t => {
-        if (typeof t.image === 'string' && t.image.length > 800000) {
-          return {
-            ...t,
-            image: 'https://images.unsplash.com/photo-1544644181-1484b3fdfc62?auto=format&fit=crop&w=800&q=80'
-          };
-        }
-        return t;
-      });
-      localStorage.setItem(TOURS_KEY, JSON.stringify(sanitized));
-      _cachedTours = sanitized;
-    }
-
-    // แจ้งเตือน Component ให้ทราบว่าข้อมูลทัวร์อัปเดตแล้ว
-    if (typeof window !== 'undefined') {
-      window.dispatchEvent(new CustomEvent('sukjai_tours_updated', { detail: { tours: _cachedTours } }));
-    }
-
-    // ส่งข้อมูลทัวร์ขึ้น Cloud อัตโนมัติ (Async ใน Background) เพื่อให้เครื่องอื่นเห็นตรงกัน
-    pushCloudTours(_cachedTours).catch(err => {
-      console.warn('[CloudSync] pushCloudTours background error:', err);
-    });
-
-    return _cachedTours;
-  } catch (e) {
-    console.error("Failed to save tours", e);
-    return tours;
+    await pushCloudTours(tours);
+  } catch (err) {
+    console.warn('[CloudSync] pushCloudTours error:', err);
   }
+
+  // 2. บันทึกลง LocalStorage
+  try {
+    localStorage.setItem(TOURS_KEY, JSON.stringify(tours));
+  } catch (quotaError) {
+    console.warn("Storage quota warning, saving optimized cache...", quotaError);
+    try {
+      localStorage.removeItem('sukjai_tours_data_v2');
+      localStorage.setItem(TOURS_KEY, JSON.stringify(tours));
+    } catch {
+      // ignore
+    }
+  }
+
+  // 3. ส่งสัญญาณเตือน Component ให้แสดงผลรูปใหม่ทันที
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('sukjai_tours_updated', { detail: { tours: _cachedTours } }));
+  }
+
+  return _cachedTours;
 }
 
-
-export function addTour(newTour) {
+export async function addTour(newTour) {
   const current = getStoredTours();
   const updated = [newTour, ...current];
-  saveStoredTours(updated);
+  await saveStoredTours(updated);
   return updated;
 }
 
-export function updateTour(updatedTour) {
+export async function updateTour(updatedTour) {
   const current = getStoredTours();
   const updated = current.map(t => t.id === updatedTour.id ? updatedTour : t);
-  saveStoredTours(updated);
+  await saveStoredTours(updated);
   return updated;
 }
 
-export function deleteTour(tourId) {
+export async function deleteTour(tourId) {
   const current = getStoredTours();
   const updated = current.filter(t => t.id !== tourId);
-  saveStoredTours(updated);
+  await saveStoredTours(updated);
   return updated;
 }
 

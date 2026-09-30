@@ -304,16 +304,21 @@ export default function AdminDashboard({ onBackToHome, onLogout, onToursUpdated 
     setIsModalOpen(true);
   };
 
-  // Image Upload handler with Auto Compression (ย่อขนาดอัตโนมัติ ไม่เกิน 80KB ป้องกัน rollback)
+  // Image Upload handler with Auto Compression (ย่อขนาดอัตโนมัติ ~30KB ไม่ล้น LocalStorage และส่ง Cloud ไว)
   const handleImageFileUpload = async (e) => {
     const file = e.target.files?.[0];
     if (file) {
       setIsCompressing(true);
       try {
-        const compressed = await compressImage(file, 1000, 0.78);
-        setFormImage(compressed);
+        const compressed = await compressImage(file, 640, 0.70);
+        if (compressed) {
+          setFormImage(compressed);
+        } else {
+          alert('ไม่สามารถอ่านไฟล์ภาพนี้ได้ กรุณาลองใหม่อีกครั้งครับ');
+        }
       } catch (err) {
         console.error("Compression error:", err);
+        alert('เกิดข้อผิดพลาดในการโหลดรูปภาพ: ' + (err?.message || ''));
       } finally {
         setIsCompressing(false);
       }
@@ -473,7 +478,7 @@ export default function AdminDashboard({ onBackToHome, onLogout, onToursUpdated 
   // ==========================================
   // SAVE COMPLETE TOUR
   // ==========================================
-  const handleFormSubmit = (e) => {
+  const handleFormSubmit = async (e) => {
     e?.preventDefault();
     if (!formTitle.trim() || !formDestination.trim() || !formPrice) {
       alert('กรุณากรอกข้อมูลสำคัญ (ชื่อทัวร์, จังหวัด, ราคา) ในส่วนข้อมูลทั่วไปให้ครบถ้วนครับ');
@@ -508,17 +513,17 @@ export default function AdminDashboard({ onBackToHome, onLogout, onToursUpdated 
     };
 
     if (modalMode === 'edit') {
-      const updatedList = updateTour(tourDataToSave);
+      const updatedList = await updateTour(tourDataToSave);
       setTours(updatedList);
       if (onToursUpdated) onToursUpdated(updatedList);
     } else {
-      const updatedList = addTour(tourDataToSave);
+      const updatedList = await addTour(tourDataToSave);
       setTours(updatedList);
       if (onToursUpdated) onToursUpdated(updatedList);
     }
 
     setIsModalOpen(false);
-    alert(`✅ บันทึกโปรแกรมทัวร์ "${tourDataToSave.title}" สำเร็จ!\nกำหนดการเดินทาง ${tourDataToSave.itinerary.length} รายการและข้อมูลทั้งหมดถูกบันทึกและซิงค์ขึ้นระบบคลาวด์เรียบร้อยแล้ว`);
+    alert(`✅ บันทึกโปรแกรมทัวร์ "${tourDataToSave.title}" สำเร็จ!\nรูปภาพและข้อมูลทัวร์ทั้งหมดถูกบันทึกและซิงค์ขึ้นระบบคลาวด์เรียบร้อยแล้ว`);
   };
 
   // Delete Booking
