@@ -24,14 +24,21 @@ export function getSyncStatus() {
   return { ..._syncStatus };
 }
 
-// Helper fetch พร้อม Timeout ป้องกันการค้าง
-async function safeFetch(url, options = {}, timeoutMs = 7000) {
+// Helper fetch พร้อม Timeout และ Anti-Cache ป้องกันเบราว์เซอร์และ Proxy แคชข้อมูลเก่า
+async function safeFetch(url, options = {}, timeoutMs = 8000) {
   const controller = new AbortController();
   const id = setTimeout(() => controller.abort(), timeoutMs);
 
   try {
+    const isGet = !options.method || options.method === 'GET';
     const response = await fetch(url, {
       ...options,
+      cache: isGet ? 'no-store' : options.cache,
+      headers: {
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        ...(options.headers || {})
+      },
       signal: controller.signal
     });
     clearTimeout(id);
@@ -48,7 +55,7 @@ async function safeFetch(url, options = {}, timeoutMs = 7000) {
 
 export async function fetchCloudUsers() {
   try {
-    const res = await safeFetch(`${BASE_URL}/sukjai_users`, {
+    const res = await safeFetch(`${BASE_URL}/sukjai_users?_t=${Date.now()}`, {
       method: 'GET',
       headers: { 'Accept': 'application/json' }
     });
@@ -108,7 +115,7 @@ export async function pushSingleCloudUser(newUser) {
 
 export async function fetchCloudTours() {
   try {
-    const res = await safeFetch(`${BASE_URL}/sukjai_tours`, {
+    const res = await safeFetch(`${BASE_URL}/sukjai_tours?_t=${Date.now()}`, {
       method: 'GET',
       headers: { 'Accept': 'application/json' }
     });
@@ -155,7 +162,7 @@ export async function pushCloudTours(toursList) {
 
 export async function fetchCloudBookings() {
   try {
-    const res = await safeFetch(`${BASE_URL}/sukjai_bookings`, {
+    const res = await safeFetch(`${BASE_URL}/sukjai_bookings?_t=${Date.now()}`, {
       method: 'GET',
       headers: { 'Accept': 'application/json' }
     });

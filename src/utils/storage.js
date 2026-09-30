@@ -565,7 +565,7 @@ export async function findUserByPhoneAsync(phoneNumber) {
   return null;
 }
 
-export function registerUser(newUser) {
+export async function registerUser(newUser) {
   try {
     const users = getRegisteredUsers();
     const cleanPhone = (newUser.phone || '').replace(/[^0-9]/g, '');
@@ -582,9 +582,11 @@ export function registerUser(newUser) {
     saveUserProfile(newUser);
 
     // ซิงค์สมาชิกใหม่ขึ้น Cloud ทันที เพื่อให้ล็อกอินจากเครื่องอื่นได้
-    pushSingleCloudUser(newUser).catch(err => {
+    try {
+      await pushSingleCloudUser(newUser);
+    } catch (err) {
       console.warn('[CloudSync] pushSingleCloudUser error:', err);
-    });
+    }
 
     return newUser;
   } catch (e) {

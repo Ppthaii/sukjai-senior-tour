@@ -99,7 +99,7 @@ export default function LoginModal({ onClose, onLoginSuccess, bookingPrompt = fa
   };
 
   // Handle Register
-  const handleRegister = (e) => {
+  const handleRegister = async (e) => {
     e?.preventDefault();
 
     if (!gender) {
@@ -166,7 +166,13 @@ export default function LoginModal({ onClose, onLoginSuccess, bookingPrompt = fa
       medicalNote: ''
     };
 
-    registerUser(newProfile);
+    setIsCheckingCloud(true);
+    try {
+      await registerUser(newProfile);
+    } finally {
+      setIsCheckingCloud(false);
+    }
+
     alert(`สมัครสมาชิกสำเร็จ ยินดีต้อนรับ ${fullName} ครับ!`);
     onLoginSuccess(newProfile);
     onClose();
