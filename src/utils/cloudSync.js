@@ -94,15 +94,83 @@ export async function pushCloudUsers(usersList) {
 }
 
 export async function pushSingleCloudUser(newUser) {
+  const maxRetries = 3;
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      const cloudUsers = await fetchCloudUsers();
+      const current = Array.isArray(cloudUsers) ? cloudUsers : [];
+      const cleanPhone = (newUser.phone || '').replace(/[^0-9]/g, '');
+      const filtered = current.filter(u => (u.phone || '').replace(/[^0-9]/g, '') !== cleanPhone);
+      const updated = [newUser, ...filtered];
+      await pushCloudUsers(updated);
+      // สำเร็จ — ลบออกจากคิวค้างส่ง (ถ้ามี)
+      removePendingSyncUser(cleanPhone);
+      return;
+    } catch (err) {
+      console.warn(`[CloudSync] pushSingleCloudUser attempt ${attempt}/${maxRetries} failed:`, err.message);
+      if (attempt < maxRetries) {
+        await new Promise(r => setTimeout(r, 1000 * attempt)); // Exponential backoff
+      }
+    }
+  }
+  // ลอง 3 ครั้งแล้วไม่สำเร็จ — เก็บลงคิวค้างส่ง
+  addPendingSyncUser(newUser);
+  console.warn('[CloudSync] pushSingleCloudUser: queued for later sync');
+}
+
+// ==========================================
+// PENDING SYNC QUEUE (คิวรอซิงค์สมาชิกขึ้น Cloud)
+// ==========================================
+const PENDING_SYNC_KEY = 'sukjai_pending_user_sync';
+
+function getPendingSyncQueue() {
   try {
-    const cloudUsers = await fetchCloudUsers();
-    const current = Array.isArray(cloudUsers) ? cloudUsers : [];
-    const cleanPhone = (newUser.phone || '').replace(/[^0-9]/g, '');
-    const filtered = current.filter(u => (u.phone || '').replace(/[^0-9]/g, '') !== cleanPhone);
-    const updated = [newUser, ...filtered];
-    await pushCloudUsers(updated);
-  } catch (err) {
-    console.warn('[CloudSync] pushSingleCloudUser error:', err.message);
+    const raw = localStorage.getItem(PENDING_SYNC_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch { return []; }
+}
+
+function addPendingSyncUser(user) {
+  try {
+    const queue = getPendingSyncQueue();
+    const cleanPhone = (user.phone || '').replace(/[^0-9]/g, '');
+    const filtered = queue.filter(u => (u.phone || '').replace(/[^0-9]/g, '') !== cleanPhone);
+    filtered.push(user);
+    localStorage.setItem(PENDING_SYNC_KEY, JSON.stringify(filtered));
+  } catch { /* ignore */ }
+}
+
+function removePendingSyncUser(cleanPhone) {
+  try {
+    const queue = getPendingSyncQueue();
+    const filtered = queue.filter(u => (u.phone || '').replace(/[^0-9]/g, '') !== cleanPhone);
+    if (filtered.length > 0) {
+      localStorage.setItem(PENDING_SYNC_KEY, JSON.stringify(filtered));
+    } else {
+      localStorage.removeItem(PENDING_SYNC_KEY);
+    }
+  } catch { /* ignore */ }
+}
+
+// ส่งคิวค้างส่งทั้งหมดขึ้น Cloud (เรียกจาก initAutoCloudSync)
+export async function drainPendingSyncQueue() {
+  const queue = getPendingSyncQueue();
+  if (queue.length === 0) return;
+  console.log(`[CloudSync] Draining ${queue.length} pending user(s)...`);
+  for (const user of queue) {
+    try {
+      const cloudUsers = await fetchCloudUsers();
+      const current = Array.isArray(cloudUsers) ? cloudUsers : [];
+      const cleanPhone = (user.phone || '').replace(/[^0-9]/g, '');
+      const exists = current.some(u => (u.phone || '').replace(/[^0-9]/g, '') === cleanPhone);
+      if (!exists) {
+        await pushCloudUsers([user, ...current]);
+      }
+      removePendingSyncUser(cleanPhone);
+    } catch (err) {
+      console.warn('[CloudSync] drainPendingSyncQueue item failed:', err.message);
+      break; // หยุดถ้าเน็ตยังมีปัญหา ลองครั้งถัดไป
+    }
   }
 }
 

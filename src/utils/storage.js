@@ -7,7 +7,8 @@ import {
   pushSingleCloudUser,
   fetchCloudTours,
   pushCloudTours,
-  pushCloudBooking
+  pushCloudBooking,
+  drainPendingSyncQueue
 } from './cloudSync';
 
 const STORAGE_KEY = 'sukjai_tour_bookings_v2';
@@ -650,6 +651,9 @@ export function clearUserProfile() {
 // ==========================================
 export async function initAutoCloudSync(onToursUpdated) {
   try {
+    // 0. ส่งคิวค้างส่ง (สมาชิกที่สมัครตอน offline) ขึ้น Cloud ก่อนเลย
+    await drainPendingSyncQueue();
+
     // 1. ดึงทัวร์ล่าสุดจาก Cloud
     const cloudTours = await fetchCloudTours();
     if (Array.isArray(cloudTours) && cloudTours.length > 0) {
@@ -665,34 +669,52 @@ export async function initAutoCloudSync(onToursUpdated) {
       }
     }
 
-    // 2. ดึงสมาชิกล่าสุดจาก Cloud ผสานเข้ากับ Local
+    // 2. ดึงสมาชิกล่าสุดจาก Cloud ผสานเข้ากับ Local (Bidirectional Sync)
     const cloudUsers = await fetchCloudUsers();
+    const localUsers = getRegisteredUsers();
+
     if (Array.isArray(cloudUsers) && cloudUsers.length > 0) {
-      const localUsers = getRegisteredUsers();
-      const phoneSet = new Set(localUsers.map(u => (u.phone || '').replace(/[^0-9]/g, '')));
-      let changed = false;
+      // 2a. ดึง cloud → local (ผู้ใช้จากเครื่องอื่นที่ยังไม่มีในเครื่องนี้)
+      const localPhoneSet = new Set(localUsers.map(u => (u.phone || '').replace(/[^0-9]/g, '')));
+      let localChanged = false;
       cloudUsers.forEach(cu => {
         const p = (cu.phone || '').replace(/[^0-9]/g, '');
-        if (p && !phoneSet.has(p)) {
+        if (p && !localPhoneSet.has(p)) {
           localUsers.push(cu);
-          phoneSet.add(p);
-          changed = true;
+          localPhoneSet.add(p);
+          localChanged = true;
         }
       });
-      if (changed) {
+      if (localChanged) {
         try {
           localStorage.setItem(REGISTERED_USERS_KEY, JSON.stringify(localUsers));
-        } catch {
-          // ignore
-        }
+        } catch { /* ignore */ }
+      }
+
+      // 2b. ดัน local → cloud (ผู้ใช้ที่สมัครในเครื่องนี้แต่ยังไม่อยู่บน cloud)
+      const cloudPhoneSet = new Set(cloudUsers.map(u => (u.phone || '').replace(/[^0-9]/g, '')));
+      const missingInCloud = localUsers.filter(u => {
+        const p = (u.phone || '').replace(/[^0-9]/g, '');
+        return p && !cloudPhoneSet.has(p) && u.role !== 'admin';
+      });
+      if (missingInCloud.length > 0) {
+        console.log(`[CloudSync] Pushing ${missingInCloud.length} local-only user(s) to cloud...`);
+        const merged = [...cloudUsers, ...missingInCloud];
+        pushCloudUsers(merged).catch(() => {});
       }
     } else {
-      // อัปโหลดสมาชิกตั้งต้นขึ้นคลาวด์
-      const localUsers = getRegisteredUsers();
+      // Cloud ว่าง → อัปโหลดสมาชิกตั้งต้นขึ้นคลาวด์
       pushCloudUsers(localUsers).catch(() => {});
     }
   } catch (err) {
     console.warn('[initAutoCloudSync] Initial sync note:', err);
   }
-}
 
+  // 3. ฟัง online event — เมื่อเน็ตกลับมา ส่งคิวค้างส่งอัตโนมัติ
+  if (typeof window !== 'undefined') {
+    window.addEventListener('online', () => {
+      console.log('[CloudSync] Back online — draining pending queue...');
+      drainPendingSyncQueue().catch(() => {});
+    });
+  }
+}
