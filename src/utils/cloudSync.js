@@ -24,7 +24,7 @@ export function getSyncStatus() {
   return { ..._syncStatus };
 }
 
-// Helper fetch พร้อม Timeout และ Anti-Cache ป้องกันเบราว์เซอร์และ Proxy แคชข้อมูลเก่า
+// Helper fetch พร้อม Timeout (ใช้ query param ?_t เพื่อเลี่ยงแคชโดยไม่ชน CORS preflight)
 async function safeFetch(url, options = {}, timeoutMs = 8000) {
   const controller = new AbortController();
   const id = setTimeout(() => controller.abort(), timeoutMs);
@@ -34,15 +34,12 @@ async function safeFetch(url, options = {}, timeoutMs = 8000) {
     const response = await fetch(url, {
       ...options,
       cache: isGet ? 'no-store' : options.cache,
-      headers: {
-        'Cache-Control': 'no-cache, no-store, must-revalidate',
-        'Pragma': 'no-cache',
-        ...(options.headers || {})
-      },
+      headers: options.headers || {},
       signal: controller.signal
     });
     clearTimeout(id);
     return response;
+
   } catch (err) {
     clearTimeout(id);
     throw err;

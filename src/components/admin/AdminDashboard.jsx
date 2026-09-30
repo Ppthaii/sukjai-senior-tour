@@ -56,10 +56,14 @@ const PRESET_MEDICAL = [
 
 // รูปภาพตัวอย่างมาตรฐาน เผื่อพนักงานไม่มีรูปในเครื่อง
 const PRESET_SAMPLE_IMAGES = [
-  { label: '🛕 ทัวร์ไหว้พระ / เจดีย์', url: 'https://images.unsplash.com/photo-1544644181-1484b3fdfc62?auto=format&fit=crop&w=800&q=80' },
-  { label: '🏛️ โบราณสถาน / อยุธยา', url: 'https://images.unsplash.com/photo-1596422846543-75c6fc197f07?auto=format&fit=crop&w=800&q=80' },
-  { label: '🌿 ธรรมชาติ / สวนผึ้ง', url: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=800&q=80' },
-  { label: '⛵ ตลาดน้ำ / อัมพวา', url: 'https://images.unsplash.com/photo-1552465011-b4e21bf6e79a?auto=format&fit=crop&w=800&q=80' }
+  { label: '🛕 พระปฐมเจดีย์ (นครปฐม)', url: 'https://images.unsplash.com/photo-1544644181-1484b3fdfc62?auto=format&fit=crop&w=800&q=80' },
+  { label: '🛍️ ตลาดดอนหวายริมน้ำ', url: 'https://images.unsplash.com/photo-1552465011-b4e21bf6e79a?auto=format&fit=crop&w=800&q=80' },
+  { label: '🏛️ วัดไชยวัฒนาราม (อยุธยา)', url: 'https://images.unsplash.com/photo-1596422846543-75c6fc197f07?auto=format&fit=crop&w=800&q=80' },
+  { label: '🛕 พระนอนวัดใหญ่ชัยมงคล', url: 'https://images.unsplash.com/photo-1508009603885-50cf7c579365?auto=format&fit=crop&w=800&q=80' },
+  { label: '🏺 โรงโอ่งมังกร / งานคราฟต์ (ราชบุรี)', url: 'https://images.unsplash.com/photo-1565193566173-7a0ee3dbe261?auto=format&fit=crop&w=800&q=80' },
+  { label: '🌿 ธรรมชาติสวนผึ้ง', url: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=800&q=80' },
+  { label: '⛵ ตลาดน้ำอัมพวา (สมุทรสงคราม)', url: 'https://images.unsplash.com/photo-1528181304800-259b08848526?auto=format&fit=crop&w=800&q=80' },
+  { label: '🌅 วิถีคลองแม่กลอง', url: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80' }
 ];
 
 export default function AdminDashboard({ onBackToHome, onLogout, onToursUpdated }) {
@@ -1278,18 +1282,28 @@ export default function AdminDashboard({ onBackToHome, onLogout, onToursUpdated 
           <div className="admin-modal-box" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '820px', width: '96%', maxHeight: '92vh', overflowY: 'auto' }}>
             
             {/* Modal Header */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.8rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.8rem', gap: '0.5rem', flexWrap: 'wrap' }}>
               <div>
                 <h2 style={{ margin: 0, fontSize: '1.35rem', color: '#0f172a' }}>
                   {modalMode === 'edit' ? '✏️ แก้ไขข้อมูลโปรแกรมทัวร์' : '➕ เพิ่มโปรแกรมทัวร์ใหม่'}
                 </h2>
                 <p style={{ margin: '0.2rem 0 0', color: '#64748b', fontSize: '0.85rem' }}>
-                  แก้ไขข้อมูลได้ทุกส่วนที่ลูกค้ามองเห็น พร้อมปุ่มเทมเพลตตัวช่วยกรอก เพื่อป้องกันความผิดพลาด
+                  แก้ไขข้อมูลได้ทุกส่วน พร้อมระบบบันทึกและซิงค์ขึ้น Cloud ทันที
                 </p>
               </div>
-              <button type="button" onClick={() => setIsModalOpen(false)} style={{ color: '#64748b', padding: '0.4rem' }}>
-                <X size={22} />
-              </button>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <button
+                  type="button"
+                  className="btn-primary"
+                  onClick={handleFormSubmit}
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', padding: '0.55rem 1.25rem', fontSize: '0.92rem', background: '#059669', borderColor: '#059669' }}
+                >
+                  <Check size={16} /> <span>💾 บันทึกทันที</span>
+                </button>
+                <button type="button" onClick={() => setIsModalOpen(false)} style={{ color: '#64748b', padding: '0.4rem' }}>
+                  <X size={22} />
+                </button>
+              </div>
             </div>
 
             {/* Step / Section Navigation Tabs */}
@@ -1570,15 +1584,25 @@ export default function AdminDashboard({ onBackToHome, onLogout, onToursUpdated 
                   </div>
                 </div>
 
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1.5rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1.5rem', gap: '0.75rem', flexWrap: 'wrap' }}>
                   <button type="button" className="btn-outline" onClick={() => setIsModalOpen(false)}>ยกเลิก</button>
-                  <button 
-                    type="button" 
-                    className="btn-primary" 
-                    onClick={() => setModalSection('itinerary')}
-                  >
-                    ถัดไป: กำหนดการเดินทาง ➡️
-                  </button>
+                  <div style={{ display: 'flex', gap: '0.6rem' }}>
+                    <button 
+                      type="button" 
+                      className="btn-primary" 
+                      onClick={handleFormSubmit}
+                      style={{ background: '#059669', borderColor: '#059669', display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}
+                    >
+                      <Check size={16} /> <span>💾 บันทึกรูปและข้อมูลทันที</span>
+                    </button>
+                    <button 
+                      type="button" 
+                      className="btn-outline" 
+                      onClick={() => setModalSection('itinerary')}
+                    >
+                      ถัดไป: กำหนดการ ➡️
+                    </button>
+                  </div>
                 </div>
               </div>
             )}
