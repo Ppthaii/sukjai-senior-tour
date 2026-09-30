@@ -654,18 +654,40 @@ export async function initAutoCloudSync(onToursUpdated) {
     // 0. ส่งคิวค้างส่ง (สมาชิกที่สมัครตอน offline) ขึ้น Cloud ก่อนเลย
     await drainPendingSyncQueue();
 
-    // 1. ดึงทัวร์ล่าสุดจาก Cloud
+    // 1. ดึงทัวร์ล่าสุดจาก Cloud แล้ว merge กับข้อมูลเริ่มต้น (ป้องกันรายละเอียดหาย)
     const cloudTours = await fetchCloudTours();
     if (Array.isArray(cloudTours) && cloudTours.length > 0) {
-      _cachedTours = cloudTours;
+      // สร้าง lookup จากข้อมูลเริ่มต้นเพื่อเติม field ที่หายไป
+      const defaultMap = {};
+      TOURS_DATA.forEach(t => { defaultMap[t.id] = t; });
+
+      const mergedTours = cloudTours.map(ct => {
+        const def = defaultMap[ct.id];
+        if (!def) return ct; // ทัวร์ที่ admin สร้างเอง ไม่มี default
+        return {
+          ...def,   // ข้อมูลเริ่มต้นครบทุก field
+          ...ct,    // ข้อมูลจาก cloud ทับทุกอย่างที่มี
+          // ถ้า cloud ไม่มี field สำคัญ ให้ดึงจาก default
+          itinerary: (Array.isArray(ct.itinerary) && ct.itinerary.length > 0) ? ct.itinerary : def.itinerary,
+          highlights: (Array.isArray(ct.highlights) && ct.highlights.length > 0) ? ct.highlights : def.highlights,
+          medicalCare: (Array.isArray(ct.medicalCare) && ct.medicalCare.length > 0) ? ct.medicalCare : def.medicalCare,
+          tagline: ct.tagline || def.tagline,
+          wheelchairFriendly: ct.wheelchairFriendly ?? def.wheelchairFriendly,
+          hasNurse: ct.hasNurse ?? def.hasNurse,
+          vehicleType: ct.vehicleType || def.vehicleType,
+          reviewsCount: ct.reviewsCount || def.reviewsCount
+        };
+      });
+
+      _cachedTours = mergedTours;
       try {
-        localStorage.setItem(TOURS_KEY, JSON.stringify(cloudTours));
+        localStorage.setItem(TOURS_KEY, JSON.stringify(mergedTours));
       } catch (err) {
         console.warn('Quota warning caching cloud tours:', err);
       }
-      if (onToursUpdated) onToursUpdated(cloudTours);
+      if (onToursUpdated) onToursUpdated(mergedTours);
       if (typeof window !== 'undefined') {
-        window.dispatchEvent(new CustomEvent('sukjai_tours_updated', { detail: { tours: cloudTours } }));
+        window.dispatchEvent(new CustomEvent('sukjai_tours_updated', { detail: { tours: mergedTours } }));
       }
     }
 
