@@ -23,3 +23,9 @@ dev-dist
 *.njsproj
 *.sln
 *.sw?
+
+# Local Netlify folder
+.netlify
+
+# Temporary office files
+~$*

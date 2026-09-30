@@ -12,7 +12,7 @@ import {
 
 const STORAGE_KEY = 'sukjai_tour_bookings_v2';
 const USER_KEY = 'sukjai_user_profile_v2';
-const TOURS_KEY = 'sukjai_tours_data_v2';
+const TOURS_KEY = 'sukjai_tours_data_v3';
 const REGISTERED_USERS_KEY = 'sukjai_registered_users_v2';
 
 
@@ -124,9 +124,23 @@ export function getStoredTours() {
   try {
     const raw = localStorage.getItem(TOURS_KEY);
     if (!raw) {
-      localStorage.setItem(TOURS_KEY, JSON.stringify(TOURS_DATA));
-      _cachedTours = TOURS_DATA;
-      return TOURS_DATA;
+      // ตรวจสอบข้อมูลจาก v2 เผื่อแอดมินเคยสร้างทัวร์ใหม่ไว้
+      let initialList = [...TOURS_DATA];
+      try {
+        const oldRaw = localStorage.getItem('sukjai_tours_data_v2');
+        if (oldRaw) {
+          const oldList = JSON.parse(oldRaw);
+          if (Array.isArray(oldList)) {
+            const defaultIds = new Set(TOURS_DATA.map(t => t.id));
+            const customTours = oldList.filter(t => !defaultIds.has(t.id));
+            initialList = [...customTours, ...TOURS_DATA];
+          }
+        }
+      } catch (_) {}
+
+      localStorage.setItem(TOURS_KEY, JSON.stringify(initialList));
+      _cachedTours = initialList;
+      return initialList;
     }
     const parsed = JSON.parse(raw);
     const tourList = Array.isArray(parsed) && parsed.length > 0 ? parsed : TOURS_DATA;
