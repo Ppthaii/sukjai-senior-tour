@@ -22,61 +22,13 @@ import '../tours/tours.css';
 // TEMPLATES & PRESETS (สำหรับให้พนักงานกด 1-คลิก เพื่อข้อมูลที่สมบูรณ์และไร้ข้อผิดพลาด)
 // ============================================================================
 
-// 1. เทมเพลตทัวร์ไหว้พระ & ทำบุญ เสริมสิริมงคล
-const TEMPLATE_TEMPLE = [
-  { time: '06:30 น.', activity: 'นัดพบ ณ สถานีขนส่งหมอชิต มีจุดตรวจคัดกรองสุขภาพเบื้องต้นและรับอาหารว่างยามเช้า' },
-  { time: '06:45 น.', activity: 'เริ่มออกเดินทางด้วยรถมินิบัส VIP สุขใจวัยเกษียณทัวร์ ปรับอากาศ กว้างขวาง นั่งสบาย' },
+// กำหนดการเริ่มต้นแบบกระชับ
+const DEFAULT_ITINERARY = [
+  { time: '06:30 น.', activity: 'นัดพบ ณ สถานีขนส่งหมอชิต ตรวจสุขภาพเบื้องต้น' },
+  { time: '06:45 น.', activity: 'เริ่มออกเดินทางด้วยรถมินิบัส VIP สุขใจวัยเกษียณทัวร์' },
   { time: '07:45 น.', activity: 'พักแวะเข้าห้องน้ำ ยืดเส้นยืดสาย และรับประทานอาหารว่าง' },
-  { time: '08:30 น.', activity: 'เดินทางถึงวัดสำคัญ นมัสการพระพุทธรูปศักดิ์สิทธิ์ ทำบุญเสริมสิริมงคล (มีทางลาดและเจ้าหน้าที่ช่วยประคอง)' },
-  { time: '09:45 น.', activity: 'ร่วมกิจกรรม Workshop ถุงหอมอโรมา หรือ เพ้นท์ถุงผ้า เพื่อฝึกสมาธิและกล้ามเนื้อมือ' },
-  { time: '11:00 น.', activity: 'เยี่ยมชมและกราบสักการะโบราณสถานสำคัญ ถ่ายภาพที่ระลึก' },
-  { time: '12:00 น.', activity: 'รับประทานอาหารกลางวันเพื่อสุขภาพ ปรุงสดใหม่ สูตรลดหวาน-โซเดียมต่ำ เคี้ยวง่าย ย่อยง่าย' },
-  { time: '13:15 น.', activity: 'เดินเที่ยวชมตลาดโบราณ ชิมขนมพื้นบ้าน และเลือกซื้อของฝากท้องถิ่นคุณภาพดี' },
-  { time: '14:30 น.', activity: 'พักทานอาหารว่างยามบ่าย และเข้าห้องน้ำก่อนเดินทางกลับ' },
-  { time: '14:50 น.', activity: 'เริ่มออกเดินทางกลับกรุงเทพฯ' },
-  { time: '16:30 - 17:00 น.', activity: 'เดินทางถึงจุดหมายปลายทางกรุงเทพฯ โดยสวัสดิภาพ (เลี่ยงเวลารถติด)' }
-];
-
-// 2. เทมเพลตทัวร์สายชิลล์ & Workshop สุขภาวะสร้างสรรค์
-const TEMPLATE_WORKSHOP = [
-  { time: '06:30 น.', activity: 'นัดพบ ณ สถานีขนส่งหมอชิต ตรวจวัดความดันและรับเครื่องดื่มสมุนไพรอุ่นๆ พร้อมของว่างเพื่อสุขภาพ' },
-  { time: '06:45 น.', activity: 'เริ่มออกเดินทางด้วยรถมินิบัส VIP บรรยากาศผ่อนคลาย เปิดเพลงย้อนยุคฟังสบายๆ ไม่เร่งรีบ' },
-  { time: '07:45 น.', activity: 'พักแวะเข้าห้องน้ำ ยืดเส้นยืดสาย และรับประทานอาหารว่าง' },
-  { time: '08:30 น.', activity: 'เยี่ยมชมศูนย์การเรียนรู้ชุมชนหรือพิพิธภัณฑ์ท้องถิ่น สัมผัสวิถีชีวิตดั้งเดิมอย่างอบอุ่น' },
-  { time: '10:00 น.', activity: 'กิจกรรม Workshop งานฝีมือ / ขนมไทยโบราณ ฝึกสมองและกล้ามเนื้อมือ นำผลงานกลับบ้านฟรี' },
-  { time: '11:30 น.', activity: 'เลือกซื้อผลิตภัณฑ์แปรรูปและของดีชุมชนติดไม้ติดมือ' },
-  { time: '12:00 น.', activity: 'รับประทานอาหารกลางวันพื้นบ้านสูตรสุขภาพเพื่อผู้สูงอายุ รสชาติกลมกล่อม' },
-  { time: '13:15 น.', activity: 'นั่งจิบชาสมุนไพร พักผ่อนใต้ร่มไม้ริมสวน ถ่ายรูปที่ระลึกเป็นกลุ่ม' },
-  { time: '14:30 น.', activity: 'พักทานอาหารว่างยามบ่าย และเข้าห้องน้ำก่อนเดินทางกลับ' },
-  { time: '15:00 น.', activity: 'เริ่มออกเดินทางกลับกรุงเทพฯ' },
-  { time: '16:30 - 17:00 น.', activity: 'เดินทางถึงกรุงเทพฯ โดยสวัสดิภาพ ด้วยความประทับใจ' }
-];
-
-// 3. เทมเพลตทัวร์ธรรมชาติ & ล่องเรือริมน้ำ
-const TEMPLATE_NATURE = [
-  { time: '06:30 น.', activity: 'รวมพล ณ สถานีขนส่งหมอชิต รับการตรวจเช็คสุขภาพเบื้องต้นและรับฟังคำแนะนำการเดินทาง' },
-  { time: '06:45 น.', activity: 'ออกเดินทางสู่แหล่งท่องเที่ยวธรรมชาติ ด้วยรถมินิบัส VIP สุขใจวัยเกษียณทัวร์' },
-  { time: '07:45 น.', activity: 'แวะพักเข้าห้องน้ำ ยืดเส้นยืดสาย และรับประทานของว่างยามเช้า' },
-  { time: '08:30 น.', activity: 'ลงเรือนำเที่ยวท้องถิ่นแบบมีราวจับและชูชีพมาตรฐาน ล่องเรือชมธรรมชาติและวิถีชีวิตริมน้ำสบายตา' },
-  { time: '10:00 น.', activity: 'แวะสักการะศาลเจ้าหรือวัดริมน้ำโบราณ ทำบุญให้อาหารปลา' },
-  { time: '11:00 น.', activity: 'กิจกรรม Workshop ทำขนมไทยโบราณ หรือ จัดสวนถาดขนาดย่อม สนุกและผ่อนคลาย' },
-  { time: '12:00 น.', activity: 'รับประทานอาหารกลางวันเมนูปลาแม่น้ำสด เมนูย่อยง่าย นั่งรับลมเย็นสบายริมน้ำ' },
-  { time: '13:15 น.', activity: 'ช้อปปิ้งตลาดน้ำ ซื้อผลไม้สดจากสวนของชาวบ้านและของหวานโบราณ' },
-  { time: '14:30 น.', activity: 'พักรับประทานอาหารว่าง และเข้าห้องน้ำก่อนออกเดินทาง' },
-  { time: '15:00 น.', activity: 'เริ่มออกเดินทางกลับกรุงเทพฯ' },
-  { time: '16:30 - 17:00 น.', activity: 'เดินทางถึงกรุงเทพฯ อย่างมีความสุขและปลอดภัย' }
-];
-
-// กิจกรรมสำเร็จรูปแยกตามช่วงเวลา (Quick Add Activity Chips)
-const QUICK_ACTIVITIES = [
-  { time: '07:30 น.', label: '🏥 จุดนัดพบ VIP & ตรวจความดัน/สุขภาพ', activity: 'นัดพบ ณ จุดรับ-ส่ง VIP สุขใจทัวร์ มีบริการตรวจวัดความดันโลหิตและสุขภาพเบื้องต้นก่อนออกเดินทาง' },
-  { time: '08:00 น.', label: '🚐 ออกเดินทางรถมินิบัส VIP', activity: 'ออกเดินทางด้วยรถมินิบัส VIP ปรับอากาศ กว้างขวาง นั่งสบาย ไม่เร่งรีบ (พักเข้าห้องน้ำทุก 1.5 ชม.)' },
-  { time: '09:30 น.', label: '🛕 ไหว้พระทำบุญวัดดัง', activity: 'เดินทางถึงวัดสำคัญ นมัสการพระประธาน ทำบุญเสริมสิริมงคล (มีทางลาดและเจ้าหน้าที่ช่วยประคอง)' },
-  { time: '11:00 น.', label: '🏛️ เยี่ยมชมโบราณสถาน/พิพิธภัณฑ์', activity: 'เยี่ยมชมโบราณสถานหรือพิพิธภัณฑ์ท้องถิ่น นำชมอย่างเข้าใจง่าย ไม่ต้องเดินไกล' },
-  { time: '12:00 น.', label: '🍲 อาหารกลางวันสูตรโซเดียมต่ำ', activity: 'รับประทานอาหารกลางวันเพื่อสุขภาพ ปรุงสดใหม่ สูตรลดหวาน-โซเดียมต่ำ เคี้ยวง่าย ย่อยง่าย' },
-  { time: '13:30 น.', label: '🎨 Workshop งานฝีมือ/ฝึกสมอง', activity: 'ร่วมกิจกรรม Workshop เสริมสุขภาวะทางใจ ฝึกกล้ามเนื้อมือและสมาธิ นำผลงานกลับบ้านฟรี' },
-  { time: '15:00 น.', label: '🛍️ ช้อปปิ้งของฝากตลาดโบราณ', activity: 'แวะชมตลาดท้องถิ่น ชิมขนมโบราณ และเลือกซื้อของฝากคุณภาพดี' },
-  { time: '16:30 น.', label: '🏡 เดินทางกลับถึงจุดนัดพบปลอดภัย', activity: 'เดินทางกลับกรุงเทพฯ โดยสวัสดิภาพ ส่งถึงจุดนัดพบอย่างปลอดภัย' }
+  { time: '12:00 น.', activity: 'รับประทานอาหารกลางวันเพื่อสุขภาพ' },
+  { time: '16:30 น.', activity: 'เดินทางกลับถึงกรุงเทพฯ โดยสวัสดิภาพ' }
 ];
 
 // คลังไฮไลท์ยอดนิยม (Quick Highlights)
@@ -89,16 +41,6 @@ const PRESET_HIGHLIGHTS = [
   'จุดชมวิวถ่ายภาพที่ระลึกสวยงามและอบอุ่น',
   'เดินทางด้วยรถมินิบัส VIP ปรับอากาศ เบาะนุ่ม มีพื้นที่วางวีลแชร์',
   'พยาบาลวิชาชีพร่วมเดินทาง คอยดูแลตรวจสุขภาพตลอดทั้งทริป'
-];
-
-// คลังสิ่งที่รวมในแพ็กเกจ (Quick Inclusions)
-const PRESET_INCLUSIONS = [
-  'รถมินิบัส VIP ปรับอากาศของบริษัท พร้อมพนักงานขับรถผู้ชำนาญเส้นทาง',
-  'พยาบาลวิชาชีพและทีมงานดูแลผู้สูงอายุตลอดทริป',
-  'อาหารกลางวันเพื่อสุขภาพ และอาหารว่าง-เครื่องดื่มสมุนไพร',
-  'อุปกรณ์และวิทยากรสำหรับกิจกรรม Workshop (นำผลงานกลับบ้านได้ฟรี)',
-  'ประกันอุบัติเหตุการเดินทางคุ้มครองสูงสุด 1,000,000 บาท',
-  'ค่าธรรมเนียมและค่าเข้าชมสถานที่ตามโปรแกรมทุกแห่ง'
 ];
 
 // คลังการดูแลสุขภาพผู้สูงอายุ (Quick Medical Care)
@@ -146,9 +88,8 @@ export default function AdminDashboard({ onBackToHome, onLogout, onToursUpdated 
   const [formTagline, setFormTagline] = useState('');
 
   // Form Fields - Detailed Dynamic Lists
-  const [formItinerary, setFormItinerary] = useState(TEMPLATE_TEMPLE);
+  const [formItinerary, setFormItinerary] = useState(DEFAULT_ITINERARY);
   const [formHighlightsList, setFormHighlightsList] = useState(['ไหว้พระทำบุญเสริมสิริมงคล', 'กิจกรรม Workshop งานฝีมือ', 'แวะซื้อของฝากท้องถิ่น']);
-  const [formIncludedList, setFormIncludedList] = useState(PRESET_INCLUSIONS);
   const [formMedicalCareList, setFormMedicalCareList] = useState(PRESET_MEDICAL);
   const [formDepartureDatesList, setFormDepartureDatesList] = useState(['18 เมษายน 2026', '26 เมษายน 2026', '2 พฤษภาคม 2026']);
 
@@ -225,7 +166,6 @@ export default function AdminDashboard({ onBackToHome, onLogout, onToursUpdated 
     vehicleType: 'รถมินิบัส VIP สุขใจวัยเกษียณทัวร์',
     itinerary: formItinerary.filter(i => i.time.trim() || i.activity.trim()),
     highlights: formHighlightsList.filter(h => h.trim()),
-    included: formIncludedList.filter(inc => inc.trim()),
     medicalCare: formMedicalCareList.filter(m => m.trim()),
     departureDates: formDepartureDatesList.filter(d => d.trim())
   };
@@ -243,9 +183,8 @@ export default function AdminDashboard({ onBackToHome, onLogout, onToursUpdated 
     setFormDuration('1 วัน (ไปเช้า-เย็นกลับ)');
     setFormImage('https://images.unsplash.com/photo-1544644181-1484b3fdfc62?auto=format&fit=crop&w=800&q=80');
     setFormTagline('');
-    setFormItinerary([...TEMPLATE_TEMPLE]);
+    setFormItinerary([...DEFAULT_ITINERARY]);
     setFormHighlightsList(['ไหว้พระทำบุญเสริมสิริมงคล', 'กิจกรรม Workshop งานฝีมือ', 'แวะซื้อของฝากท้องถิ่น']);
-    setFormIncludedList([...PRESET_INCLUSIONS]);
     setFormMedicalCareList([...PRESET_MEDICAL]);
     setFormDepartureDatesList(['18 เมษายน 2026', '26 เมษายน 2026', '2 พฤษภาคม 2026']);
     setIsModalOpen(true);
@@ -266,9 +205,8 @@ export default function AdminDashboard({ onBackToHome, onLogout, onToursUpdated 
     setFormTagline(tour.tagline || '');
     
     // Load existing lists or fallbacks
-    setFormItinerary(Array.isArray(tour.itinerary) && tour.itinerary.length > 0 ? [...tour.itinerary] : [...TEMPLATE_TEMPLE]);
+    setFormItinerary(Array.isArray(tour.itinerary) && tour.itinerary.length > 0 ? [...tour.itinerary] : [...DEFAULT_ITINERARY]);
     setFormHighlightsList(Array.isArray(tour.highlights) && tour.highlights.length > 0 ? [...tour.highlights] : ['ไหว้พระทำบุญ', 'กิจกรรม Workshop']);
-    setFormIncludedList(Array.isArray(tour.included) && tour.included.length > 0 ? [...tour.included] : [...PRESET_INCLUSIONS]);
     setFormMedicalCareList(Array.isArray(tour.medicalCare) && tour.medicalCare.length > 0 ? [...tour.medicalCare] : [...PRESET_MEDICAL]);
     setFormDepartureDatesList(Array.isArray(tour.departureDates) && tour.departureDates.length > 0 ? [...tour.departureDates] : ['18 เมษายน 2026']);
     
@@ -378,10 +316,6 @@ export default function AdminDashboard({ onBackToHome, onLogout, onToursUpdated 
     setFormItinerary(next);
   };
 
-  const handleAddQuickActivity = (item) => {
-    setFormItinerary([...formItinerary, { time: item.time, activity: item.activity }]);
-  };
-
   // ==========================================
   // HIGHLIGHTS HANDLERS
   // ==========================================
@@ -398,21 +332,8 @@ export default function AdminDashboard({ onBackToHome, onLogout, onToursUpdated 
     }
   };
 
-  // ==========================================
-  // INCLUSIONS HANDLERS
-  // ==========================================
-  const handleAddIncluded = () => setFormIncludedList([...formIncludedList, '']);
-  const handleRemoveIncluded = (idx) => setFormIncludedList(formIncludedList.filter((_, i) => i !== idx));
-  const handleUpdateIncluded = (idx, val) => {
-    const next = [...formIncludedList];
-    next[idx] = val;
-    setFormIncludedList(next);
-  };
-  const handleAddPresetInclusion = (text) => {
-    if (!formIncludedList.includes(text)) {
-      setFormIncludedList([...formIncludedList, text]);
-    }
-  };
+
+
 
   // ==========================================
   // MEDICAL CARE HANDLERS
@@ -489,7 +410,6 @@ export default function AdminDashboard({ onBackToHome, onLogout, onToursUpdated 
       vehicleType: 'รถมินิบัส VIP สุขใจวัยเกษียณทัวร์',
       itinerary: formItinerary.filter(i => i.time.trim() || i.activity.trim()),
       highlights: formHighlightsList.filter(h => h.trim()),
-      included: formIncludedList.filter(inc => inc.trim()),
       medicalCare: formMedicalCareList.filter(m => m.trim()),
       departureDates: formDepartureDatesList.filter(d => d.trim())
     };
@@ -1122,14 +1042,6 @@ export default function AdminDashboard({ onBackToHome, onLogout, onToursUpdated 
               </button>
             </div>
 
-            {/* Staff Guidance Tip Banner */}
-            <div className="staff-tip-box">
-              <Sparkles size={18} style={{ flexShrink: 0, marginTop: '2px' }} />
-              <div>
-                <strong>คำแนะนำสำหรับพนักงาน:</strong> ทุกหัวข้อจะมีปุ่ม <em>"ตัวเลือกสำเร็จรูป"</em> หรือ <em>"ใช้เทมเพลต"</em> สามารถกดคลิกเดียวเพื่อใส่ข้อความมาตรฐานที่ถูกต้องตามหลักสูตรทัวร์ผู้สูงอายุได้ทันที ไม่ต้องเสียเวลาพิมพ์เองครับ
-              </div>
-            </div>
-
             {/* Step / Section Navigation Tabs */}
             <div className="modal-step-tabs">
               <button
@@ -1151,7 +1063,7 @@ export default function AdminDashboard({ onBackToHome, onLogout, onToursUpdated 
                 className={`modal-step-btn ${modalSection === 'highlights' ? 'active' : ''}`}
                 onClick={() => setModalSection('highlights')}
               >
-                <span>🌟 3. จุดเด่น & สิ่งที่รวม</span>
+                <span>🌟 3. ไฮไลท์จุดเด่น ({formHighlightsList.length})</span>
               </button>
               <button
                 type="button"
@@ -1407,61 +1319,6 @@ export default function AdminDashboard({ onBackToHome, onLogout, onToursUpdated 
             {/* ================= SECTION 2: ITINERARY TIMELINE BUILDER ================= */}
             {modalSection === 'itinerary' && (
               <div style={{ animation: 'fadeIn 0.15s ease' }}>
-                
-                {/* 1-Click Complete Template Loaders */}
-                <div className="preset-panel">
-                  <div className="preset-panel-title">
-                    <Wand2 size={16} color="var(--color-primary, #9c3858)" />
-                    โหลดเทมเพลตกำหนดการสำเร็จรูปทั้งวัน (คลิกเดียวครบ 8 ช่วงเวลา):
-                  </div>
-                  <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                    <button
-                      type="button"
-                      className="preset-chip"
-                      onClick={() => setFormItinerary([...TEMPLATE_TEMPLE])}
-                      style={{ background: '#ffffff', borderColor: '#f43f5e', color: '#be123c', fontWeight: 600 }}
-                    >
-                      🛕 ทัวร์ไหว้พระ & ทำบุญ (มาตรฐาน 8 ช่วงเวลา)
-                    </button>
-                    <button
-                      type="button"
-                      className="preset-chip"
-                      onClick={() => setFormItinerary([...TEMPLATE_WORKSHOP])}
-                      style={{ background: '#ffffff', borderColor: '#0ea5e9', color: '#0369a1', fontWeight: 600 }}
-                    >
-                      🎨 ทัวร์สายชิลล์ & Workshop สุขภาวะ (8 ช่วงเวลา)
-                    </button>
-                    <button
-                      type="button"
-                      className="preset-chip"
-                      onClick={() => setFormItinerary([...TEMPLATE_NATURE])}
-                      style={{ background: '#ffffff', borderColor: '#10b981', color: '#047857', fontWeight: 600 }}
-                    >
-                      ⛵ ทัวร์ธรรมชาติ & ล่องเรือริมน้ำ (8 ช่วงเวลา)
-                    </button>
-                  </div>
-                </div>
-
-                {/* Quick Activities Palette */}
-                <div className="preset-panel" style={{ background: '#fdfafb' }}>
-                  <div className="preset-panel-title">
-                    <Plus size={15} color="var(--color-primary, #9c3858)" />
-                    กดเพิ่มกิจกรรมสำเร็จรูปทีละช่วงเวลา (ไม่ต้องพิมพ์เอง):
-                  </div>
-                  <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
-                    {QUICK_ACTIVITIES.map((act, i) => (
-                      <button
-                        key={i}
-                        type="button"
-                        className="preset-chip"
-                        onClick={() => handleAddQuickActivity(act)}
-                        title={act.activity}
-                      >
-                        {act.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
 
                 {/* Timeline Builder List */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
@@ -1545,7 +1402,7 @@ export default function AdminDashboard({ onBackToHome, onLogout, onToursUpdated 
 
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1.5rem' }}>
                   <button type="button" className="btn-outline" onClick={() => setModalSection('basic')}>⬅️ ย้อนกลับ</button>
-                  <button type="button" className="btn-primary" onClick={() => setModalSection('highlights')}>ถัดไป: จุดเด่น & สิ่งที่รวม ➡️</button>
+                  <button type="button" className="btn-primary" onClick={() => setModalSection('highlights')}>ถัดไป: ไฮไลท์จุดเด่น ➡️</button>
                 </div>
               </div>
             )}
@@ -1602,63 +1459,6 @@ export default function AdminDashboard({ onBackToHome, onLogout, onToursUpdated 
                       <button 
                         type="button" 
                         onClick={() => handleRemoveHighlight(idx)}
-                        style={{ color: '#ef4444', padding: '0.4rem', cursor: 'pointer' }}
-                        title="ลบข้อนี้"
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Inclusions */}
-                <div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.35rem' }}>
-                    <label style={{ fontWeight: 700, color: '#0f172a', fontSize: '0.95rem' }}>
-                      🛡️ สิ่งที่รวมอยู่ในแพ็กเกจทัวร์ ({formIncludedList.length} รายการ)
-                    </label>
-                    <button 
-                      type="button" 
-                      className="preset-chip"
-                      onClick={handleAddIncluded}
-                    >
-                      <Plus size={13} /> เพิ่มรายการที่รวม
-                    </button>
-                  </div>
-
-                  {/* Inclusions Preset Palette */}
-                  <div className="preset-panel" style={{ marginBottom: '0.75rem' }}>
-                    <div className="preset-panel-title">
-                      <ShieldCheck size={14} color="var(--color-primary, #9c3858)" />
-                      คลิกเพื่อเพิ่มสิ่งที่รวมมาตรฐาน:
-                    </div>
-                    <div style={{ display: 'flex', gap: '0.35rem', flexWrap: 'wrap' }}>
-                      {PRESET_INCLUSIONS.map((inc, i) => (
-                        <button
-                          key={i}
-                          type="button"
-                          className="preset-chip"
-                          onClick={() => handleAddPresetInclusion(inc)}
-                        >
-                          + {inc}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {formIncludedList.map((inc, idx) => (
-                    <div key={idx} className="dynamic-item-row">
-                      <span style={{ fontSize: '0.85rem', color: '#94a3b8', width: '22px', textAlign: 'center', fontWeight: 600 }}>{idx + 1}.</span>
-                      <input 
-                        type="text" 
-                        className="admin-form-input"
-                        placeholder="เช่น อาหารกลางวันเพื่อสุขภาพ และอาหารว่าง-เครื่องดื่มสมุนไพร"
-                        value={inc}
-                        onChange={(e) => handleUpdateIncluded(idx, e.target.value)}
-                      />
-                      <button 
-                        type="button" 
-                        onClick={() => handleRemoveIncluded(idx)}
                         style={{ color: '#ef4444', padding: '0.4rem', cursor: 'pointer' }}
                         title="ลบข้อนี้"
                       >
@@ -1982,15 +1782,6 @@ export default function AdminDashboard({ onBackToHome, onLogout, onToursUpdated 
                         </div>
                         <ul style={{ paddingLeft: '1.2rem', margin: 0, fontSize: '0.84rem', color: '#14532d', lineHeight: '1.6' }}>
                           {previewTour.medicalCare.map((m, idx) => <li key={idx}>{m}</li>)}
-                        </ul>
-                      </div>
-
-                      <div style={{ background: '#fdf2f8', padding: '1rem', borderRadius: '10px', border: '1px solid #fbcfe8' }}>
-                        <div style={{ fontWeight: 700, color: 'var(--color-primary, #9c3858)', marginBottom: '0.4rem', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                          <ShieldCheck size={17} /> สิ่งที่รวมในแพ็กเกจ:
-                        </div>
-                        <ul style={{ paddingLeft: '1.2rem', margin: 0, fontSize: '0.84rem', color: '#831843', lineHeight: '1.6' }}>
-                          {previewTour.included.map((inc, idx) => <li key={idx}>{inc}</li>)}
                         </ul>
                       </div>
                     </div>

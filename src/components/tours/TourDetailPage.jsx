@@ -114,22 +114,6 @@ export default function TourDetailPage({ tour, onBack, onBook }) {
                   </ul>
                 </div>
               )}
-
-              {tour.included && (
-                <div className="info-card">
-                  <h3 className="card-title">
-                    <ShieldCheck size={20} color="var(--color-primary)" /> สิ่งที่รวมในแพ็กเกจ
-                  </h3>
-                  <ul className="info-list">
-                    {tour.included.map((item, idx) => (
-                      <li key={idx}>
-                        <span className="bullet-check">✓</span>
-                        <span>{item}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
             </div>
 
             {/* Trip Type Info - Single Day Trip */}
