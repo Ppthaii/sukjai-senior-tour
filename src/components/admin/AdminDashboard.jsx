@@ -4,7 +4,7 @@ import {
   MapPin, Calendar, Users, DollarSign, HeartPulse, Accessibility, 
   FileSpreadsheet, Check, X, Upload, Image as ImageIcon, Sparkles,
   Clock, CheckCircle2, ArrowUp, ArrowDown, 
-  Bus, Map, CreditCard, Cloud, Download, Loader2,
+  Bus, Map as MapIcon, CreditCard, Cloud, Download, Loader2,
   Printer, Ticket
 } from 'lucide-react';
 import { formatPrice } from '../../utils/formatters';
@@ -72,7 +72,7 @@ export default function AdminDashboard({ onBackToHome, onLogout, onToursUpdated 
   const [selectedTripId, setSelectedTripId] = useState('all');
 
   const tripsData = useMemo(() => {
-    const map = new Map();
+    const map = new window.Map();
 
     // 1. Add all registered tours
     tours.forEach(tour => {
@@ -1379,7 +1379,7 @@ export default function AdminDashboard({ onBackToHome, onLogout, onToursUpdated 
 
                   <div className="admin-form-group">
                     <label style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', color: '#0f172a' }}>
-                      <Map size={15} color="var(--color-primary, #9c3858)" /> ภูมิภาค (ระบบตรวจจับให้อัตโนมัติ ป้องกันข้อมูลผิดพลาด)
+                      <MapIcon size={15} color="var(--color-primary, #9c3858)" /> ภูมิภาค (ระบบตรวจจับให้อัตโนมัติ ป้องกันข้อมูลผิดพลาด)
                     </label>
                     <div style={{
                       padding: '0.65rem 0.9rem',
@@ -1983,7 +1983,7 @@ export default function AdminDashboard({ onBackToHome, onLogout, onToursUpdated 
                         </p>
                         <div style={{ display: 'flex', gap: '0.75rem', fontSize: '0.85rem', color: '#475569', flexWrap: 'wrap' }}>
                           <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                            <Map size={15} color="var(--color-primary, #9c3858)" /> {previewTour.destination} ({previewTour.region})
+                            <MapIcon size={15} color="var(--color-primary, #9c3858)" /> {previewTour.destination} ({previewTour.region})
                           </span>
                           <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
                             <Bus size={15} color="var(--color-primary, #9c3858)" /> {previewTour.vehicleType}
