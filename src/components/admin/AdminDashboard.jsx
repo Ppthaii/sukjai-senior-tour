@@ -3,17 +3,19 @@ import {
   ShieldCheck, Plus, Trash2, Edit3, Eye, LogOut, 
   MapPin, Calendar, Users, DollarSign, HeartPulse, Accessibility, 
   FileSpreadsheet, Check, X, Upload, Image as ImageIcon, Sparkles,
-  Clock, CheckCircle2, Wand2, ArrowUp, ArrowDown, 
-  Bus, Map, CreditCard, Cloud, Download, Loader2
+  Clock, CheckCircle2, ArrowUp, ArrowDown, 
+  Bus, Map, CreditCard, Cloud, Download, Loader2,
+  Printer, Ticket
 } from 'lucide-react';
 import { formatPrice } from '../../utils/formatters';
 import TourCard from '../tours/TourCard';
 import { 
   getStoredTours, saveStoredTours, addTour, updateTour, deleteTour, 
-  getBookings, deleteBooking, exportBookingsToCSV, expandBookingsToPassengers 
+  getBookings, deleteBooking, expandBookingsToPassengers 
 } from '../../utils/storage';
 import { compressImage } from '../../utils/imageCompressor';
 import { fetchCloudTours, exportAllDataAsJSON } from '../../utils/cloudSync';
+import { printBookingReceipt, printTripManifest } from '../../utils/printReceipt';
 import { getRegionByProvince, ALL_THAI_PROVINCES } from '../../utils/thaiProvinces';
 import './admin.css';
 import '../tours/tours.css';
@@ -65,6 +67,90 @@ export default function AdminDashboard({ onBackToHome, onLogout, onToursUpdated 
   const [tours, setTours] = useState(() => getStoredTours());
   const [bookings, setBookings] = useState(() => getBookings());
   const passengersList = useMemo(() => expandBookingsToPassengers(bookings), [bookings]);
+
+  // Trip-based Bookings Grouping State
+  const [selectedTripId, setSelectedTripId] = useState('all');
+
+  const tripsData = useMemo(() => {
+    const map = new Map();
+
+    // 1. Add all registered tours
+    tours.forEach(tour => {
+      map.set(tour.id, {
+        id: tour.id,
+        title: tour.title,
+        destination: tour.destination,
+        image: tour.image,
+        price: tour.price,
+        departureDates: tour.departureDates || [],
+        passengers: [],
+        bookings: []
+      });
+    });
+
+    // 2. Distribute passengers to corresponding trips
+    passengersList.forEach(p => {
+      let tourId = p.rawBooking?.tourId;
+      if (!tourId || !map.has(tourId)) {
+        const found = tours.find(t => t.title === p.tourTitle || t.id === tourId);
+        if (found) tourId = found.id;
+      }
+
+      if (tourId && map.has(tourId)) {
+        const trip = map.get(tourId);
+        trip.passengers.push(p);
+        if (p.rawBooking && !trip.bookings.some(b => b.id === p.rawBooking.id)) {
+          trip.bookings.push(p.rawBooking);
+        }
+      } else {
+        const fallbackKey = tourId || p.tourTitle || 'custom-trip';
+        if (!map.has(fallbackKey)) {
+          map.set(fallbackKey, {
+            id: fallbackKey,
+            title: p.tourTitle || 'ทัวร์พิเศษ',
+            destination: p.tourDestination || '-',
+            image: 'https://images.unsplash.com/photo-1544644181-1484b3fdfc62?auto=format&fit=crop&w=800&q=80',
+            price: p.amount || 0,
+            departureDates: [p.departureDate],
+            passengers: [],
+            bookings: []
+          });
+        }
+        const trip = map.get(fallbackKey);
+        trip.passengers.push(p);
+        if (p.rawBooking && !trip.bookings.some(b => b.id === p.rawBooking.id)) {
+          trip.bookings.push(p.rawBooking);
+        }
+      }
+    });
+
+    return Array.from(map.values()).map(trip => {
+      const rev = trip.passengers.reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
+      const wc = trip.passengers.filter(p => p.specialNeeds?.wheelchair).length;
+      const diet = trip.passengers.filter(p => p.specialNeeds?.dietary && p.specialNeeds.dietary !== 'ปกติ (หวาน-เค็มน้อย)').length;
+      const med = trip.passengers.filter(p => p.specialNeeds?.medicalNote).length;
+
+      return {
+        ...trip,
+        totalRevenue: rev,
+        wheelchairCount: wc,
+        specialDietCount: diet,
+        medicalNoteCount: med
+      };
+    });
+  }, [tours, passengersList]);
+
+  const activeTrip = useMemo(() => {
+    if (selectedTripId === 'all') return null;
+    return tripsData.find(t => t.id === selectedTripId) || null;
+  }, [tripsData, selectedTripId]);
+
+  const displayedPassengers = useMemo(() => {
+    if (selectedTripId === 'all' || !activeTrip) {
+      return passengersList;
+    }
+    return activeTrip.passengers;
+  }, [selectedTripId, activeTrip, passengersList]);
 
   // Inline Quick Price Edit State
   const [editingTourId, setEditingTourId] = useState(null);
@@ -447,7 +533,7 @@ export default function AdminDashboard({ onBackToHome, onLogout, onToursUpdated 
               <ShieldCheck size={16} /> โหมดผู้ดูแลระบบ (Admin Role)
             </div>
             <h1 className="admin-title">แผงควบคุมระบบ สุขใจวัยเกษียณทัวร์</h1>
-            <p className="admin-subtitle">จัดการโปรแกรมทัวร์, กำหนดการเดินทาง, ตรวจสอบรายชื่อผู้จอง และส่งออกข้อมูลไปยัง Google Sheets / Excel</p>
+            <p className="admin-subtitle">จัดการโปรแกรมทัวร์, กำหนดการเดินทาง และตรวจสอบรายชื่อผู้โดยสารแยกตามแต่ละทริป</p>
           </div>
 
           <div className="admin-header-actions" style={{ flexWrap: 'wrap', gap: '0.5rem' }}>
@@ -564,7 +650,7 @@ export default function AdminDashboard({ onBackToHome, onLogout, onToursUpdated 
             className={`admin-tab-btn ${activeTab === 'bookings' ? 'active' : ''}`}
             onClick={() => setActiveTab('bookings')}
           >
-            <FileSpreadsheet size={18} /> รายชื่อผู้โดยสาร & Google Sheets ({passengersList.length} ท่าน / {bookings.length} รายการจอง)
+            <Users size={18} /> รายการจองตั๋วแยกตามทริป ({bookings.length} การจอง / {passengersList.length} ที่นั่ง)
           </button>
         </div>
 
@@ -681,88 +767,222 @@ export default function AdminDashboard({ onBackToHome, onLogout, onToursUpdated 
           </section>
         )}
 
-        {/* ===================== TAB 2: BOOKINGS MANAGEMENT ===================== */}
+        {/* ===================== TAB 2: BOOKINGS MANAGEMENT (SEPARATED BY TRIP) ===================== */}
         {activeTab === 'bookings' && (
           <section className="admin-card-section">
-            <div className="section-top-row">
+            <div className="section-top-row" style={{ flexWrap: 'wrap', gap: '1rem', marginBottom: '1.25rem' }}>
               <div>
-                <h2 className="section-h2">รายการจองตั๋วและข้อมูลผู้โดยสาร</h2>
-                <p style={{ margin: '0.2rem 0 0', color: '#64748b', fontSize: '0.9rem' }}>
-                  ข้อมูลการจองจริงที่ลูกค้าทำรายการผ่านหน้าเว็บ พร้อมรายละเอียดการดูแลสุขภาพ
+                <h2 className="section-h2" style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                  <Bus size={24} color="var(--color-primary, #9c3858)" /> 
+                  รายการจองตั๋วแยกตามทริป
+                </h2>
+                <p style={{ margin: '0.2rem 0 0', color: '#64748b', fontSize: '0.92rem' }}>
+                  คลิกเลือกทริปที่ต้องการดู เพื่อตรวจสอบรายชื่อผู้โดยสารและข้อมูลสุขภาพอย่างเป็นระเบียบ ไม่สับสน
                 </p>
               </div>
 
-              {/* Google Sheets / CSV Export Button */}
-              <button 
-                type="button" 
-                className="btn-primary"
-                onClick={exportBookingsToCSV}
-                style={{ background: '#16a34a', borderColor: '#16a34a', fontSize: '0.95rem', padding: '0.65rem 1.25rem' }}
-                title="ดาวน์โหลดไฟล์เพื่อนำไปเปิดใน Google Sheets หรือ Excel"
-              >
-                <FileSpreadsheet size={19} /> ส่งออกเป็น Google Sheets / Excel (.CSV)
-              </button>
+              {/* Action buttons on top */}
+              <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap' }}>
+                <button
+                  type="button"
+                  className="btn-print-manifest"
+                  onClick={() => printTripManifest(activeTrip || { title: 'ทุกทริป (ภาพรวม)', destination: 'ทุกเส้นทาง' }, displayedPassengers)}
+                  disabled={displayedPassengers.length === 0}
+                  title="สั่งพิมพ์ใบรายชื่อผู้โดยสารและข้อมูลสุขภาพ (Passenger Manifest) ใส่กระดาษ A4"
+                  style={{ opacity: displayedPassengers.length === 0 ? 0.5 : 1 }}
+                >
+                  <Printer size={16} /> พิมพ์ใบรายชื่อผู้โดยสาร{activeTrip ? ` (${activeTrip.title})` : ''}
+                </button>
+              </div>
             </div>
 
-            {/* รายงานสรุปช่องทางการชำระเงิน (Payment Methods Breakdown Report) */}
-            <div className="admin-payment-report-card">
-              <div className="payment-report-header">
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.55rem' }}>
-                  <CreditCard size={20} color="var(--color-primary, #9c3858)" />
-                  <h3 style={{ margin: 0, fontSize: '1.05rem', color: '#0f172a', fontWeight: 700 }}>
-                    รายงานสรุปช่องทางการชำระเงิน (Payment Breakdown)
-                  </h3>
+            {/* 1. Trip Selector Cards Grid */}
+            <div style={{ marginBottom: '1.5rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.65rem' }}>
+                <div style={{ fontSize: '0.92rem', fontWeight: 700, color: '#334155' }}>
+                  🧭 เลือกทริปการเดินทาง ({tripsData.length} โปรแกรม):
                 </div>
-                <span className="payment-report-badge">
-                  รวม {bookings.length} รายการจอง ({formatPrice(totalRevenue)})
-                </span>
-              </div>
-
-              <div className="payment-channels-grid">
-                <div className="payment-channel-item promptpay" style={{ flex: onTripBookings.length === 0 ? '1' : undefined }}>
-                  <div className="channel-top">
-                    <div className="channel-icon-title">
-                      <span className="channel-icon">💳</span>
-                      <div>
-                        <strong style={{ fontSize: '0.98rem', color: '#166534' }}>สแกน QR PromptPay (ชำระเต็มจำนวน 100%)</strong>
-                        <span className="channel-tag tag-success">เงินเข้าบัญชีเรียบร้อย</span>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="channel-amount" style={{ color: '#15803d' }}>{formatPrice(promptPayRevenue)}</div>
-                  <div className="channel-details">
-                    {promptPayBookings.length} รายการจอง ({passengersList.filter(p => (p.paymentMethod || '').toLowerCase().includes('promptpay') || (p.paymentMethod || '').includes('QR')).length} ที่นั่ง) • ช่องทางชำระเงินหลัก
-                  </div>
-                </div>
-
-                {onTripBookings.length > 0 && (
-                  <div className="payment-channel-item ontrip">
-                    <div className="channel-top">
-                      <div className="channel-icon-title">
-                        <span className="channel-icon">💵</span>
-                        <div>
-                          <strong style={{ fontSize: '0.95rem', color: '#854d0e' }}>มัดจำ & ชำระวันเดินทาง (รายการเดิม)</strong>
-                          <span className="channel-tag tag-warning">รอชำระหน้างาน</span>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="channel-amount" style={{ color: '#b45309' }}>{formatPrice(onTripRevenue)}</div>
-                    <div className="channel-details">
-                      {onTripBookings.length} รายการจอง ({passengersList.filter(p => !((p.paymentMethod || '').toLowerCase().includes('promptpay') || (p.paymentMethod || '').includes('QR'))).length} ที่นั่ง)
-                    </div>
-                  </div>
+                {selectedTripId !== 'all' && (
+                  <button
+                    type="button"
+                    onClick={() => setSelectedTripId('all')}
+                    style={{ fontSize: '0.82rem', color: '#2563eb', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}
+                  >
+                    ดูทุกทริปรวมกัน
+                  </button>
                 )}
               </div>
+
+              <div className="trip-selector-grid">
+                {/* Option 0: All Trips */}
+                <div 
+                  className={`trip-selector-card ${selectedTripId === 'all' ? 'active' : ''}`}
+                  onClick={() => setSelectedTripId('all')}
+                >
+                  <div>
+                    <div className="trip-selector-card-top">
+                      <div className="trip-card-all-icon">🗺️</div>
+                      <div>
+                        <div className="trip-card-title">✨ ทุกทริปรวมกัน (ภาพรวม)</div>
+                        <div className="trip-card-prov">รวมทุกเส้นทาง</div>
+                      </div>
+                    </div>
+                    <div className="trip-card-metrics">
+                      <span className="badge-tag" style={{ background: '#ecfdf5', color: '#047857', fontWeight: 600 }}>
+                        <Users size={12} /> {passengersList.length} ที่นั่ง
+                      </span>
+                      <span className="badge-tag" style={{ background: '#f8fafc', color: '#475569' }}>
+                        {bookings.length} รายการจอง
+                      </span>
+                    </div>
+                  </div>
+                  <div className="trip-card-footer">
+                    <span style={{ fontWeight: 700, color: '#0f172a' }}>{formatPrice(totalRevenue)}</span>
+                    <span style={{ color: selectedTripId === 'all' ? 'var(--color-primary, #9c3858)' : '#94a3b8', fontWeight: 600 }}>
+                      {selectedTripId === 'all' ? '✓ กำลังดูอยู่' : 'คลิกเพื่อดู'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Individual Trip Cards */}
+                {tripsData.map(trip => {
+                  const isSelected = selectedTripId === trip.id;
+                  const hasBookings = trip.passengers.length > 0;
+                  return (
+                    <div
+                      key={trip.id}
+                      className={`trip-selector-card ${isSelected ? 'active' : ''}`}
+                      onClick={() => setSelectedTripId(trip.id)}
+                    >
+                      <div>
+                        <div className="trip-selector-card-top">
+                          <img 
+                            src={trip.image || 'https://images.unsplash.com/photo-1544644181-1484b3fdfc62?auto=format&fit=crop&w=800&q=80'} 
+                            alt={trip.title} 
+                            className="trip-card-thumb"
+                          />
+                          <div>
+                            <div className="trip-card-title" title={trip.title}>{trip.title}</div>
+                            <div className="trip-card-prov">จ.{trip.destination}</div>
+                          </div>
+                        </div>
+
+                        <div className="trip-card-metrics">
+                          {hasBookings ? (
+                            <>
+                              <span className="badge-tag" style={{ background: '#ecfdf5', color: '#047857', fontWeight: 700 }}>
+                                <Users size={12} /> {trip.passengers.length} ที่นั่ง
+                              </span>
+                              <span className="badge-tag" style={{ background: '#f1f5f9', color: '#334155' }}>
+                                {trip.bookings.length} ใบจอง
+                              </span>
+                              {trip.wheelchairCount > 0 && (
+                                <span className="badge-tag wheelchair" style={{ fontSize: '0.72rem' }}>
+                                  <Accessibility size={11} /> {trip.wheelchairCount}
+                                </span>
+                              )}
+                            </>
+                          ) : (
+                            <span className="badge-tag" style={{ background: '#f8fafc', color: '#94a3b8' }}>
+                              ยังไม่มีผู้จอง (0 ที่นั่ง)
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="trip-card-footer">
+                        <div>
+                          {hasBookings ? (
+                            <strong style={{ color: '#0f172a' }}>{formatPrice(trip.totalRevenue)}</strong>
+                          ) : (
+                            <span style={{ color: '#64748b' }}>{formatPrice(trip.price)} / ท่าน</span>
+                          )}
+                        </div>
+                        <span style={{ color: isSelected ? 'var(--color-primary, #9c3858)' : '#64748b', fontWeight: isSelected ? 700 : 500 }}>
+                          {isSelected ? '✓ กำลังดูทริปนี้' : 'เลือกทริปนี้'}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
 
-            {passengersList.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '3rem 1rem', color: '#64748b' }}>
-                <Users size={40} style={{ opacity: 0.4, marginBottom: '0.5rem' }} />
-                <p>ยังไม่มีรายการจองในขณะนี้</p>
+            {/* 2. Focused Trip Header Banner */}
+            <div className="trip-detail-banner">
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                  <span className="badge-tag" style={{ background: 'var(--color-primary, #9c3858)', color: '#fff', fontSize: '0.78rem' }}>
+                    {activeTrip ? 'ทริปที่เลือก' : 'ภาพรวมทั้งหมด'}
+                  </span>
+                  <h3 style={{ margin: 0, fontSize: '1.2rem', color: '#0f172a', fontWeight: 800 }}>
+                    {activeTrip ? activeTrip.title : 'รวมผู้โดยสารทุกทริป'}
+                  </h3>
+                  {activeTrip && (
+                    <span style={{ fontSize: '0.88rem', color: '#64748b' }}>
+                      (จ.{activeTrip.destination})
+                    </span>
+                  )}
+                </div>
+
+                <div className="trip-detail-stats-row">
+                  <div className="trip-stat-chip">
+                    <Users size={15} color="#0284c7" />
+                    <span>ผู้โดยสาร: <strong>{displayedPassengers.length} ท่าน</strong></span>
+                  </div>
+                  <div className="trip-stat-chip">
+                    <DollarSign size={15} color="#16a34a" />
+                    <span>ยอดชำระ: <strong style={{ color: '#16a34a' }}>{formatPrice(activeTrip ? activeTrip.totalRevenue : totalRevenue)}</strong></span>
+                  </div>
+                  <div className="trip-stat-chip">
+                    <Accessibility size={15} color="#d97706" />
+                    <span>ใช้วีลแชร์: <strong>{activeTrip ? activeTrip.wheelchairCount : wheelchairCount} ท่าน</strong></span>
+                  </div>
+                  <div className="trip-stat-chip">
+                    <HeartPulse size={15} color="#dc2626" />
+                    <span>การดูแลพิเศษ: <strong>{(activeTrip ? activeTrip.specialDietCount + activeTrip.medicalNoteCount : passengersList.filter(p => (p.specialNeeds?.dietary && p.specialNeeds.dietary !== 'ปกติ (หวาน-เค็มน้อย)') || p.specialNeeds?.medicalNote).length)} รายการ</strong></span>
+                  </div>
+                </div>
+              </div>
+
+              {activeTrip && (
+                <div>
+                  <button
+                    type="button"
+                    className="btn-outline"
+                    onClick={() => setSelectedTripId('all')}
+                    style={{ fontSize: '0.85rem', background: '#fff', padding: '0.5rem 0.9rem' }}
+                  >
+                    ดูทุกทริปรวมกัน
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* 3. Passengers Table & Mobile Cards */}
+            {displayedPassengers.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '3.5rem 1rem', background: '#f8fafc', borderRadius: '14px', border: '1px dashed #cbd5e1' }}>
+                <Users size={44} style={{ opacity: 0.35, marginBottom: '0.75rem', color: 'var(--color-primary, #9c3858)' }} />
+                <h4 style={{ margin: '0 0 0.35rem', color: '#334155', fontSize: '1.05rem' }}>
+                  {activeTrip ? `ยังไม่มีผู้โดยสารจองทริป "${activeTrip.title}"` : 'ยังไม่มีรายการจองในระบบ'}
+                </h4>
+                <p style={{ margin: '0 0 1rem', color: '#64748b', fontSize: '0.88rem' }}>
+                  เมื่อมีลูกค้าจองผ่านหน้าเว็บ ข้อมูลผู้เดินทางและรายละเอียดสุขภาพจะปรากฏที่นี่ทันที
+                </p>
+                {activeTrip && (
+                  <button
+                    type="button"
+                    className="btn-primary"
+                    onClick={() => setSelectedTripId('all')}
+                    style={{ fontSize: '0.85rem', padding: '0.5rem 1rem' }}
+                  >
+                    สลับไปดูทริปอื่นที่มีผู้จองแล้ว
+                  </button>
+                )}
               </div>
             ) : (
               <>
-                {/* 1. Desktop Table View (>= 768px) */}
+                {/* 3.1 Desktop Table View (>= 768px) */}
                 <div className="table-responsive desktop-only-table">
                   <table className="admin-table">
                     <thead>
@@ -770,17 +990,17 @@ export default function AdminDashboard({ onBackToHome, onLogout, onToursUpdated 
                         <th>รหัสการจอง</th>
                         <th>ชื่อผู้เดินทาง</th>
                         <th>เบอร์โทรศัพท์</th>
-                        <th>โปรแกรมทัวร์</th>
+                        {selectedTripId === 'all' && <th>โปรแกรมทัวร์</th>}
                         <th>รอบเดินทาง</th>
                         <th>ที่นั่ง</th>
                         <th>การดูแลสุขภาพพิเศษ</th>
                         <th>ยอดชำระ</th>
-                        <th>สถานะ</th>
+                        <th>ตั๋ว / ใบเสร็จ</th>
                         <th>จัดการ</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {passengersList.map((passenger) => (
+                      {displayedPassengers.map((passenger) => (
                         <tr 
                           key={passenger.id}
                           style={{ 
@@ -819,15 +1039,21 @@ export default function AdminDashboard({ onBackToHome, onLogout, onToursUpdated 
                             )}
                           </td>
                           <td>
-                            <div>{passenger.phone}</div>
+                            <div>
+                              <a href={`tel:${passenger.phone}`} style={{ color: '#2563eb', textDecoration: 'underline', fontWeight: 600 }}>
+                                {passenger.phone}
+                              </a>
+                            </div>
                             {passenger.contactNote && (
                               <div style={{ fontSize: '0.75rem', color: '#64748b' }}>{passenger.contactNote}</div>
                             )}
                           </td>
-                          <td style={{ maxWidth: '180px' }}>
-                            <div style={{ fontWeight: 600 }}>{passenger.tourTitle}</div>
-                            <div style={{ fontSize: '0.8rem', color: '#64748b' }}>จ.{passenger.tourDestination}</div>
-                          </td>
+                          {selectedTripId === 'all' && (
+                            <td style={{ maxWidth: '170px' }}>
+                              <div style={{ fontWeight: 600 }}>{passenger.tourTitle}</div>
+                              <div style={{ fontSize: '0.8rem', color: '#64748b' }}>จ.{passenger.tourDestination}</div>
+                            </td>
+                          )}
                           <td style={{ whiteSpace: 'nowrap' }}>{passenger.departureDate}</td>
                           <td>
                             <strong style={{ color: '#0284c7', fontSize: '1rem', background: '#f0f9ff', padding: '0.2rem 0.55rem', borderRadius: '6px', border: '1px solid #bae6fd' }}>
@@ -862,14 +1088,19 @@ export default function AdminDashboard({ onBackToHome, onLogout, onToursUpdated 
                             )}
                             <div style={{ marginTop: '0.25rem' }}>
                               <span className={`badge-tag payment-method ${(passenger.paymentMethod?.toLowerCase().includes('promptpay') || passenger.paymentMethod?.includes('QR')) ? 'promptpay' : 'ontrip'}`}>
-                                {(passenger.paymentMethod?.toLowerCase().includes('promptpay') || passenger.paymentMethod?.includes('QR')) ? '💳 QR PromptPay' : '💵 จ่ายวันเดินทาง'}
+                                {(passenger.paymentMethod?.toLowerCase().includes('promptpay') || passenger.paymentMethod?.includes('QR')) ? '💳 PromptPay' : '💵 จ่ายวันเดินทาง'}
                               </span>
                             </div>
                           </td>
                           <td>
-                            <span className="badge-tag paid">
-                              <Check size={12} /> {passenger.paymentStatus || 'ชำระแล้ว'}
-                            </span>
+                            <button
+                              type="button"
+                              className="btn-ticket-print"
+                              onClick={() => printBookingReceipt(passenger.rawBooking)}
+                              title="พิมพ์ตั๋วและใบเสร็จรับเงินสำหรับรายการนี้"
+                            >
+                              <Ticket size={13} /> พิมพ์ตั๋ว
+                            </button>
                           </td>
                           <td>
                             <button 
@@ -878,10 +1109,10 @@ export default function AdminDashboard({ onBackToHome, onLogout, onToursUpdated 
                                 passenger.parentBookingId, 
                                 passenger.totalPassengers > 1 ? `การจองกลุ่มรหัส ${passenger.parentBookingId} ทั้งหมด` : `การจองรหัส ${passenger.displayId}`
                               )}
-                              style={{ color: '#ef4444', padding: '0.35rem 0.5rem' }}
+                              style={{ color: '#ef4444', padding: '0.35rem 0.5rem', background: '#fee2e2', borderRadius: '6px', border: 'none', cursor: 'pointer' }}
                               title={passenger.totalPassengers > 1 ? `ยกเลิกการจองกลุ่ม ${passenger.parentBookingId}` : `ยกเลิกการจองนี้`}
                             >
-                              <Trash2 size={16} />
+                              <Trash2 size={15} />
                             </button>
                           </td>
                         </tr>
@@ -890,9 +1121,9 @@ export default function AdminDashboard({ onBackToHome, onLogout, onToursUpdated 
                   </table>
                 </div>
 
-                {/* 2. Mobile Smartphone Card View (< 768px) */}
+                {/* 3.2 Mobile Smartphone Card View (< 768px) */}
                 <div className="mobile-only-cards">
-                  {passengersList.map((passenger) => (
+                  {displayedPassengers.map((passenger) => (
                     <div 
                       key={passenger.id} 
                       className="mobile-passenger-card"
@@ -944,9 +1175,11 @@ export default function AdminDashboard({ onBackToHome, onLogout, onToursUpdated 
                           )}
                         </div>
 
-                        <div style={{ marginTop: '0.5rem', fontSize: '0.86rem', color: '#334155' }}>
-                          <strong>ทัวร์:</strong> {passenger.tourTitle} (จ.{passenger.tourDestination})
-                        </div>
+                        {selectedTripId === 'all' && (
+                          <div style={{ marginTop: '0.5rem', fontSize: '0.86rem', color: '#334155' }}>
+                            <strong>ทัวร์:</strong> {passenger.tourTitle} (จ.{passenger.tourDestination})
+                          </div>
+                        )}
                         <div style={{ fontSize: '0.82rem', color: '#64748b', marginTop: '0.2rem' }}>
                           <strong>วันเดินทาง:</strong> {passenger.departureDate}
                         </div>
@@ -995,17 +1228,22 @@ export default function AdminDashboard({ onBackToHome, onLogout, onToursUpdated 
                           </div>
                         </div>
 
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                          <span className="badge-tag paid" style={{ fontSize: '0.75rem' }}>
-                            <Check size={11} /> {passenger.paymentStatus?.includes('มัดจำ') ? 'มัดจำแล้ว' : 'ชำระแล้ว'}
-                          </span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+                          <button
+                            type="button"
+                            className="btn-ticket-print"
+                            onClick={() => printBookingReceipt(passenger.rawBooking)}
+                            title="พิมพ์ตั๋ว/ใบเสร็จ"
+                          >
+                            <Ticket size={13} /> ตั๋ว/ใบเสร็จ
+                          </button>
                           <button 
                             type="button"
                             onClick={() => handleDeleteBooking(
                               passenger.parentBookingId, 
                               passenger.totalPassengers > 1 ? `การจองกลุ่มรหัส ${passenger.parentBookingId} ทั้งหมด` : `การจองรหัส ${passenger.displayId}`
                             )}
-                            style={{ color: '#ef4444', padding: '0.4rem 0.55rem', borderRadius: '8px', background: '#fee2e2' }}
+                            style={{ color: '#ef4444', padding: '0.4rem 0.55rem', borderRadius: '8px', background: '#fee2e2', border: 'none', cursor: 'pointer' }}
                             title="ยกเลิก/ลบ"
                           >
                             <Trash2 size={16} />

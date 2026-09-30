@@ -375,3 +375,224 @@ export function printBookingReceipt(booking) {
     window.print();
   }
 }
+
+/**
+ * สั่งพิมพ์ใบรายชื่อผู้โดยสารและข้อมูลสุขภาพประจำทริป (Trip Passenger Manifest & Health Roster)
+ * สำหรับหัวหน้าทัวร์และพยาบาลวิชาชีพใช้เช็คชื่อและดูแลลูกทัวร์บนรถมินิบัส
+ * @param {Object} trip - ข้อมูลทริป
+ * @param {Array} passengers - รายชื่อผู้โดยสารประจำทริป
+ */
+export function printTripManifest(trip, passengers = []) {
+  if (!trip) return;
+
+  const printDateStr = new Date().toLocaleDateString('th-TH', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+
+  const wheelchairCount = passengers.filter(p => p.specialNeeds?.wheelchair).length;
+  const dietCount = passengers.filter(p => p.specialNeeds?.dietary && p.specialNeeds.dietary !== 'ปกติ (หวาน-เค็มน้อย)').length;
+
+  const rowsHtml = passengers.map((p, idx) => {
+    const specialList = [];
+    if (p.specialNeeds?.wheelchair) specialList.push('♿ ใช้วีลแชร์');
+    if (p.specialNeeds?.dietary) specialList.push(`🍽️ ${p.specialNeeds.dietary}`);
+    if (p.specialNeeds?.medicalNote) specialList.push(`⚠️ ${p.specialNeeds.medicalNote}`);
+    if (p.customerNote) specialList.push(`💬 ${p.customerNote}`);
+    const specialText = specialList.length > 0 ? specialList.join('<br>') : '-';
+
+    return `
+      <tr style="border-bottom: 1px solid #e2e8f0; font-size: 13px;">
+        <td style="padding: 8px 6px; text-align: center; font-weight: bold;">${idx + 1}</td>
+        <td style="padding: 8px 6px; text-align: center; font-weight: bold; color: #0284c7; background: #f0f9ff; border-radius: 4px;">${p.seat || '-'}</td>
+        <td style="padding: 8px 6px;">
+          <strong>${p.name || '-'}</strong>
+          <div style="font-size: 11px; color: #64748b;">รหัส: ${p.displayId || p.id}</div>
+        </td>
+        <td style="padding: 8px 6px; text-align: center;">${p.age || '-'} ปี</td>
+        <td style="padding: 8px 6px; text-align: center;">${p.phone || '-'}</td>
+        <td style="padding: 8px 6px; font-size: 12px; line-height: 1.4;">${specialText}</td>
+        <td style="padding: 8px 6px; text-align: center;">
+          <span style="display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 11px; background: #dcfce7; color: #166534; font-weight: bold;">
+            ${p.paymentStatus?.includes('มัดจำ') ? 'มัดจำแล้ว' : 'ชำระแล้ว'}
+          </span>
+        </td>
+        <td style="padding: 8px 6px; text-align: center; border: 1px dashed #cbd5e1; width: 60px;">
+          <div style="height: 18px;"></div>
+        </td>
+      </tr>
+    `;
+  }).join('');
+
+  const printHtml = `
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <title>ใบรายชื่อผู้โดยสาร_${trip.title || 'Trip'}</title>
+  <style>
+    @page {
+      size: A4 portrait;
+      margin: 10mm 12mm;
+    }
+    * {
+      box-sizing: border-box;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+    body {
+      font-family: 'Sarabun', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      color: #0f172a;
+      background: #ffffff;
+    }
+    .manifest-container {
+      width: 100%;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .header-box {
+      border-bottom: 2px solid #9c3858;
+      padding-bottom: 12px;
+      margin-bottom: 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+    .title {
+      font-size: 20px;
+      font-weight: 800;
+      color: #9c3858;
+      margin: 0;
+    }
+    .subtitle {
+      font-size: 13px;
+      color: #475569;
+      margin-top: 3px;
+    }
+    .meta-box {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 10px 14px;
+      margin-bottom: 14px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      font-size: 13px;
+    }
+    .meta-item {
+      display: flex;
+      gap: 5px;
+    }
+    .meta-item strong {
+      color: #1e293b;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 16px;
+    }
+    th {
+      background: #9c3858;
+      color: #ffffff;
+      padding: 8px 6px;
+      font-size: 12px;
+      font-weight: 700;
+      text-align: center;
+      border: 1px solid #9c3858;
+    }
+    .footer-note {
+      margin-top: 14px;
+      padding-top: 8px;
+      border-top: 1px solid #e2e8f0;
+      font-size: 11px;
+      color: #64748b;
+      display: flex;
+      justify-content: space-between;
+    }
+  </style>
+</head>
+<body>
+  <div class="manifest-container">
+    <div class="header-box">
+      <div>
+        <h1 class="title">🚌 สุขใจวัยเกษียณทัวร์ — ใบรายชื่อผู้โดยสารและข้อมูลสุขภาพ</h1>
+        <div class="subtitle">โปรแกรมทัวร์: <strong>${trip.title}</strong> (จ.${trip.destination || '-'})</div>
+      </div>
+      <div style="text-align: right; font-size: 11px; color: #64748b;">
+        <div>พิมพ์เมื่อ: ${printDateStr}</div>
+        <div style="font-weight: bold; color: #15803d; margin-top: 2px;">พยาบาลวิชาชีพร่วมเดินทาง</div>
+      </div>
+    </div>
+
+    <div class="meta-box">
+      <div class="meta-item"><strong>จำนวนผู้เดินทาง:</strong> ${passengers.length} ท่าน</div>
+      <div class="meta-item"><strong>ผู้ใช้วีลแชร์:</strong> ${wheelchairCount} ท่าน</div>
+      <div class="meta-item"><strong>อาหารพิเศษ/ข้อควรระวัง:</strong> ${dietCount} รายการ</div>
+      <div class="meta-item"><strong>ยานพาหนะ:</strong> รถมินิบัส VIP สุขใจวัยเกษียณทัวร์</div>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th style="width: 32px;">ลำดับ</th>
+          <th style="width: 48px;">ที่นั่ง</th>
+          <th>ชื่อ - สกุล ผู้เดินทาง</th>
+          <th style="width: 50px;">อายุ</th>
+          <th style="width: 95px;">เบอร์ติดต่อ</th>
+          <th>ข้อมูลสุขภาพ / วีลแชร์ / อาหาร</th>
+          <th style="width: 75px;">สถานะ</th>
+          <th style="width: 55px;">เช็คชื่อ</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${rowsHtml || '<tr><td colspan="8" style="text-align: center; padding: 20px; color: #94a3b8;">ยังไม่มีรายชื่อผู้โดยสารในทริปนี้</td></tr>'}
+      </tbody>
+    </table>
+
+    <div class="footer-note">
+      <div>บริษัท สุขใจวัยเกษียณทัวร์ จำกัด | หัวหน้าทัวร์ & พยาบาลวิชาชีพ โทรสายด่วน: 081-999-7777</div>
+      <div>เอกสารภายในสำหรับการปฏิบัติการทริป</div>
+    </div>
+  </div>
+</body>
+</html>
+  `;
+
+  let printIframe = document.getElementById('sukjai-manifest-iframe');
+  if (!printIframe) {
+    printIframe = document.createElement('iframe');
+    printIframe.id = 'sukjai-manifest-iframe';
+    printIframe.style.position = 'fixed';
+    printIframe.style.right = '0';
+    printIframe.style.bottom = '0';
+    printIframe.style.width = '0';
+    printIframe.style.height = '0';
+    printIframe.style.border = 'none';
+    document.body.appendChild(printIframe);
+  }
+
+  const iframeDoc = printIframe.contentWindow?.document || printIframe.contentDocument;
+  if (iframeDoc) {
+    iframeDoc.open();
+    iframeDoc.write(printHtml);
+    iframeDoc.close();
+
+    setTimeout(() => {
+      try {
+        printIframe.contentWindow?.focus();
+        printIframe.contentWindow?.print();
+      } catch (err) {
+        console.warn('Manifest iframe print error:', err);
+        window.print();
+      }
+    }, 450);
+  } else {
+    window.print();
+  }
+}
