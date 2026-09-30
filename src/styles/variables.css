@@ -1,0 +1,79 @@
+/* ==========================================================================
+   CSS VARIABLES & DESIGN SYSTEM: สุขใจวัยเกษียณทัวร์
+   ธีมมินิมอล ดอกโบตั๋น (Minimal Peony Blossom)
+   โทนสีชมพูกลีบดอกโบตั๋น นุ่มนวล ละมุน สบายตา ออกแบบพิเศษเพื่อผู้สูงวัย
+   ========================================================================== */
+
+:root {
+  /* Dynamic Senior Font Scaling (Default: normal) */
+  --font-base-size: 16px;
+
+  /* Primary Theme (Peony Rose / ดอกโบตั๋นกลีบเข้มสง่างาม อ่านง่าย สบายตา) */
+  --color-primary: #9C3858;
+  --color-primary-hover: #832b47;
+  --color-primary-light: #fdf0f4;
+  --color-primary-subtle: #f6d6e1;
+  
+  /* Secondary Theme (Sage Green / ใบเลี้ยงโบตั๋นธรรมชาติ มินิมอล) */
+  --color-secondary: #5A7D6B;
+  --color-secondary-hover: #486657;
+  --color-secondary-light: #f1f6f3;
+
+  /* Accent & Highlights (Pollen Gold / เกสรดอกโบตั๋นสีทองอ่อน & กลีบชมพู) */
+  --color-accent: #D49A3D;
+  --color-accent-hover: #b8822f;
+  --color-accent-light: #fef9f0;
+  --color-peony-pink: #E57399;
+  --color-peony-pink-hover: #cf567f;
+  --color-peony-pink-light: #fdf2f6;
+
+  /* Backgrounds & Canvas (Minimalist Petal White & Cream) */
+  --color-bg-page: #fdfafb;
+  --color-bg-card: #ffffff;
+  --color-bg-surface: #fcf3f6;
+  --color-bg-contrast: #2D1A22;
+
+  /* Text & Typography (High legibility & warmth for seniors) */
+  --color-text-main: #2D1F24;
+  --color-text-muted: #6B5860;
+  --color-text-subtle: #96838A;
+  --color-text-inverse: #ffffff;
+
+  /* Status Colors */
+  --color-success: #3D8B57;
+  --color-success-bg: #edf7f1;
+  --color-warning: #c27803;
+  --color-warning-bg: #fff8eb;
+  --color-danger: #c93b48;
+  --color-danger-bg: #fdf0f1;
+
+  /* Borders & Shadows (Soft & Minimalist Petal Feel) */
+  --border-radius-sm: 10px;
+  --border-radius-md: 18px;
+  --border-radius-lg: 24px;
+  --border-radius-full: 9999px;
+  --border-color: #f2e4ea;
+  --border-color-focus: #E57399;
+
+  --shadow-sm: 0 3px 10px rgba(156, 56, 88, 0.05);
+  --shadow-md: 0 8px 24px rgba(156, 56, 88, 0.08);
+  --shadow-lg: 0 16px 36px rgba(156, 56, 88, 0.12);
+  --shadow-modal: 0 20px 50px rgba(45, 26, 34, 0.16);
+
+  /* Fonts */
+  --font-family-display: 'Prompt', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-family-body: 'Sarabun', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+  /* Transitions */
+  --transition-fast: 0.15s ease;
+  --transition-normal: 0.25s ease;
+}
+
+/* Accessibility Font Sizes */
+html[data-font-size="large"] {
+  --font-base-size: 18.5px;
+}
+
+html[data-font-size="huge"] {
+  --font-base-size: 21px;
+}

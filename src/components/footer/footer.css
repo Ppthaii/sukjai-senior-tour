@@ -1,0 +1,101 @@
+.footer {
+  background-color: #2d1921;
+  color: #f1e2e7;
+  padding: 4.5rem 0 2rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.footer-grid {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr 1fr 1.2fr;
+  gap: 2.5rem;
+  margin-bottom: 3.5rem;
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.footer-brand-title {
+  font-size: 1.45rem;
+  color: #ffffff;
+  margin-bottom: 0.5rem;
+}
+
+.footer-brand-desc {
+  font-size: 0.95rem;
+  color: #c9b3bc;
+  line-height: 1.65;
+  margin-bottom: 1.25rem;
+}
+
+.tat-license-badge {
+  display: inline-block;
+  background: rgba(229, 115, 153, 0.12);
+  border: 1px solid rgba(229, 115, 153, 0.25);
+  border-radius: var(--border-radius-sm);
+  padding: 0.4rem 0.8rem;
+  font-size: 0.85rem;
+  color: #f4a2bd;
+  font-weight: 600;
+}
+
+.footer-col-title {
+  font-size: 1.15rem;
+  color: #ffffff;
+  margin-bottom: 1.25rem;
+}
+
+.footer-links {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.footer-link {
+  color: #c9b3bc;
+  text-decoration: none;
+  font-size: 0.95rem;
+  transition: color var(--transition-fast);
+}
+
+.footer-link:hover {
+  color: #ffffff;
+  text-decoration: underline;
+}
+
+.footer-contact-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  font-size: 0.95rem;
+  color: #c9b3bc;
+  margin-bottom: 0.75rem;
+}
+
+.footer-bottom {
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding-top: 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  font-size: 0.88rem;
+  color: #a8949d;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+@media (max-width: 900px) {
+  .footer-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .footer-grid {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+}

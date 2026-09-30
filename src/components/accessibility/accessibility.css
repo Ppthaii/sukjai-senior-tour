@@ -1,0 +1,60 @@
+.accessibility-bar {
+  background-color: #3b1f28;
+  color: #faeef2;
+  padding: 0.45rem 1rem;
+  font-size: 0.95rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.accessibility-inner {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.accessibility-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.font-scaler {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.font-scaler-label {
+  font-weight: 500;
+  opacity: 0.95;
+  font-size: 0.92rem;
+  white-space: nowrap;
+  color: #faeef2;
+}
+
+.font-btn {
+  background: rgba(255, 255, 255, 0.12);
+  color: #faeef2;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: var(--border-radius-sm, 8px);
+  padding: 0.28rem 0.85rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: all var(--transition-fast, 0.2s ease);
+}
+
+.font-btn:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.font-btn.active {
+  background: #E57399;
+  border-color: #E57399;
+  color: #ffffff;
+  font-weight: 700;
+  box-shadow: 0 0 10px rgba(229, 115, 153, 0.5);
+}
